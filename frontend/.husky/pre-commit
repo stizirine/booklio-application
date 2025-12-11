@@ -1,0 +1,5 @@
+# Run lint-staged (lint + fix on staged files)
+npx lint-staged
+
+# Run tests on staged files
+npm test -- --watchAll=false --passWithNoTests

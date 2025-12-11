@@ -1,0 +1,17 @@
+@import './tokens/colors.css';
+@import './tokens/scale.css';
+
+:root {
+	--container-padding: var(--space);
+}
+
+body {
+	background-color: var(--color-bg);
+	color: var(--color-fg);
+	font-size: var(--text-base);
+	line-height: 1.6;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+
+

@@ -1,0 +1,14 @@
+:root {
+	--text-base: 14px;
+	--space: 8px;
+}
+
+@media (min-width: 640px) {
+	:root { --text-base: 15px; --space: 10px; }
+}
+
+@media (min-width: 1024px) {
+	:root { --text-base: 16px; --space: 12px; }
+}
+
+

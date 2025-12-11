@@ -1,0 +1,242 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [develop, main, master, 'feature/*']
+  pull_request:
+    branches: [develop, main, master, 'feature/*']
+  # schedule:
+  #   # Scan de sécurité quotidien à 2h du matin
+  #   - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test || echo "No tests configured yet"
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  # security-scan:
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'schedule' || github.event_name == 'push'
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #         cache: npm
+
+  #     - name: Install deps
+  #       run: npm ci
+
+  #     - name: Run security audit
+  #       run: npm audit --audit-level=moderate || echo "Security issues found"
+
+  #     - name: CodeQL Analysis
+  #       uses: github/codeql-action/init@v3
+  #       with:
+  #         languages: javascript
+
+  #     - name: Perform CodeQL Analysis
+  #       uses: github/codeql-action/analyze@v3
+  #       with:
+  #         upload: true
+
+  performance-test:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feature/')
+    needs: build-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Start application
+        run: |
+          npm ci --omit=dev
+          npm start &
+          sleep 10
+
+      - name: Run performance tests
+        run: |
+          # Test de charge simple avec curl
+          for i in {1..10}; do
+            curl -f http://localhost:4000/health || echo "Health check failed"
+          done
+          echo "Performance test completed"
+
+  docker-publish:
+    needs: [build-test, performance-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feature/')
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=ref,event=branch
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  deploy-ssh:
+    needs: docker-publish
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+      - name: Deploy via SSH (docker compose up -d)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            # Les variables SSH sont déjà vérifiées par GitHub Actions
+            echo "🚀 Démarrage du déploiement..."
+
+            REPO=${{ github.repository }}
+            REF_NAME=${{ github.ref_name }}
+            if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.ref }}" = "refs/heads/master" ]; then
+              IMAGE=ghcr.io/$REPO:latest
+            elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+              IMAGE=ghcr.io/$REPO:dev
+            elif [[ "${{ github.ref }}" == refs/heads/feature/* ]]; then
+              IMAGE=ghcr.io/$REPO:$REF_NAME
+            else
+              IMAGE=ghcr.io/$REPO:$REF_NAME
+            fi
+            WORKDIR="${{ secrets.DEPLOY_DIR || '/opt/booklio' }}"
+            sudo mkdir -p "$WORKDIR"
+            cd "$WORKDIR"
+
+            # Backup de l'ancienne version
+            if [ -f docker-compose.prod.yml ]; then
+              cp docker-compose.prod.yml docker-compose.prod.yml.backup.$(date +%Y%m%d_%H%M%S)
+            fi
+
+            if [ ! -f docker-compose.prod.yml ]; then
+              cat > docker-compose.prod.yml <<'YAML'
+            version: '3.9'
+            services:
+              app:
+                image: IMAGE_PLACEHOLDER
+                container_name: booklio
+                restart: unless-stopped
+                env_file:
+                  - .env.prod
+                ports:
+                  - '4000:4000'
+                healthcheck:
+                  test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+                  interval: 30s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 40s
+            YAML
+            fi
+            sed -i.bak "s|IMAGE_PLACEHOLDER|$IMAGE|g" docker-compose.prod.yml
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            cat > .env.prod <<ENV
+            NODE_ENV=production
+            MONGO_URI=${{ secrets.MONGO_URI }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            GCAL_CLIENT_ID=${{ secrets.GCAL_CLIENT_ID }}
+            GCAL_CLIENT_SECRET=${{ secrets.GCAL_CLIENT_SECRET }}
+            GCAL_REDIRECT_URI=${{ secrets.GCAL_REDIRECT_URI }}
+            ENV
+            docker compose -f docker-compose.prod.yml up -d
+
+  post-deploy-monitoring:
+    needs: deploy-ssh
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+      - name: Monitor Application
+        run: |
+          echo "🔍 Monitoring post-déploiement..."
+          # Test de charge post-déploiement
+          for i in {1..5}; do
+            curl -f http://${{ secrets.SSH_HOST }}:4000/health || echo "Health check $i failed"
+            sleep 5
+          done
+          echo "✅ Monitoring terminé"

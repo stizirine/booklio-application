@@ -1,0 +1,87 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_file:
+        description: 'Fichier de backup à restaurer'
+        required: true
+        type: string
+      reason:
+        description: 'Raison du rollback'
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback Application
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR }}
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          script: |
+            set -euo pipefail
+            WORKDIR="${DEPLOY_DIR:-/opt/booklio}"
+            BACKUP_FILE="${{ github.event.inputs.backup_file }}"
+            REASON="${{ github.event.inputs.reason }}"
+
+            echo "🔄 Rollback initié par ${{ github.actor }}"
+            echo "📝 Raison: $REASON"
+            echo "📦 Backup: $BACKUP_FILE"
+
+            cd "$WORKDIR"
+
+            if [ ! -f "$BACKUP_FILE" ]; then
+              echo "❌ Fichier de backup non trouvé: $BACKUP_FILE"
+              echo "Fichiers disponibles:"
+              ls -la docker-compose.prod.yml.backup.* 2>/dev/null || echo "Aucun backup trouvé"
+              exit 1
+            fi
+
+            # Arrêter l'application actuelle
+            echo "⏹️  Arrêt de l'application..."
+            docker compose -f docker-compose.prod.yml down || true
+
+            # Restaurer le backup
+            echo "📦 Restauration du backup..."
+            cp "$BACKUP_FILE" docker-compose.prod.yml
+
+            # Redémarrer l'application
+            echo "🚀 Redémarrage de l'application..."
+            docker compose -f docker-compose.prod.yml up -d
+
+            # Vérification de santé
+            echo "🔍 Vérification de santé..."
+            sleep 30
+            if curl -f http://localhost:4000/health; then
+              echo "✅ Rollback réussi - Application en ligne"
+            else
+              echo "❌ Échec du rollback - Application non accessible"
+              exit 1
+            fi
+
+      - name: Notify Rollback Success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: '🔄 Rollback réussi - Booklio restauré vers ${{ github.event.inputs.backup_file }}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Rollback Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: '❌ Échec du rollback Booklio - Intervention manuelle requise'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

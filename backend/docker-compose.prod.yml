@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  app:
+    image: ghcr.io/OWNER/REPO:latest # remplacé dynamiquement dans le workflow
+    container_name: booklio
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - GCAL_CLIENT_ID=${GCAL_CLIENT_ID}
+      - GCAL_CLIENT_SECRET=${GCAL_CLIENT_SECRET}
+      - GCAL_REDIRECT_URI=${GCAL_REDIRECT_URI}
+      - REQUIRED_HEADER_NAME=${REQUIRED_HEADER_NAME:-x-api-key}
+      - REQUIRED_HEADER_VALUE=${REQUIRED_HEADER_VALUE:-}
+      - REQUIRED_HEADER_VALUE_DEV=${REQUIRED_HEADER_VALUE_DEV:-}
+      - REQUIRED_HEADER_VALUE_STAGING=${REQUIRED_HEADER_VALUE_STAGING:-}
+      - REQUIRED_HEADER_VALUE_PROD=${REQUIRED_HEADER_VALUE_PROD:-}
+    ports:
+      - '4000:4000'

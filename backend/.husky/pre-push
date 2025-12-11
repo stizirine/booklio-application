@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+echo "🔍 Full validation (validate)..."
+npm run validate
+
+echo "✅ Validation passed!"

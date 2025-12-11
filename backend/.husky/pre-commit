@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Run lint-staged on staged files
+npm run pre-commit
+
+# Ensure the project builds
+npm run build
+
+# Run type checks
+npm run typecheck

@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # --- FRONTEND (Point d'entrée unique) ---
+  frontend:
+    build: ./booklio-app
+    container_name: booklio-frontend
+    restart: always
+    ports:
+      - "80:80" # C'est la seule porte d'entrée publique !
+    depends_on:
+      - booklio-backend
+    networks:
+      - booklio-network
+
+  # --- BACKEND (Caché derrière le front) ---
+  booklio-backend:
+    build: ./booklio
+    container_name: booklio-api
+    restart: always
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - BCRYPT_SALT_ROUNDS=${BCRYPT_SALT_ROUNDS}
+      # Connexion interne Docker
+      - MONGO_URI=mongodb://booklio:${MONGO_PASSWORD}@mongo:27017/booklio?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      # Variables secrètes injectées
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+    networks:
+      - booklio-network
+    # PAS de ports exposé ici pour la sécurité
+
+  # --- BASE DE DONNÉES ---
+  mongo:
+    image: mongo:7
+    container_name: booklio-mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=booklio
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - booklio-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: booklio-redis
+    restart: always
+    networks:
+      - booklio-network
+
+  # --- MONITORING (Optionnel) ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: booklio-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - booklio-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: booklio-grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000' # Accessible via http://ton-ip:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - booklio-network
+
+networks:
+  booklio-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  prometheus-data:
+  grafana-data:

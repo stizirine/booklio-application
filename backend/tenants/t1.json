@@ -1,0 +1,10 @@
+{
+  "tenantId": "t1",
+  "clientType": "optician",
+  "capabilities": ["optics"],
+  "featureFlags": {
+    "optics_measurements": true,
+    "optics_prescriptions": true,
+    "optics_print": true
+  }
+}

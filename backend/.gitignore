@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.tmp
+**/*.log
+.DS_Store
+*.log
+coverage
+.nyc_output
+.cache
+.vscode/settings.json
+.idea
+*.swp
+*.swo
+*~

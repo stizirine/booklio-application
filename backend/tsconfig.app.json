@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"],
+      "@modules/*": ["src/modules/*"],
+      "@crm/*": ["src/modules/crm/*"],
+      "@gcal/*": ["src/modules/gcal/*"],
+      "@users/*": ["src/modules/users/*"],
+      "@auth/*": ["src/modules/auth/*"],
+      "@agent/*": ["src/modules/agent/*"],
+      "@payments/*": ["src/modules/payments/*"],
+      "@appointments/*": ["src/modules/appointments/*"],
+      "@invoices/*": ["src/modules/invoices/*"],
+      "@notifications/*": ["src/modules/notifications/*"],
+      "@reports/*": ["src/modules/reports/*"],
+      "@settings/*": ["src/modules/settings/*"],
+      "@tasks/*": ["src/modules/tasks/*"],
+      "@utils/*": ["src/modules/utils/*"],
+      "@middlewares/*": ["src/middlewares/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "scripts/**"]
+}

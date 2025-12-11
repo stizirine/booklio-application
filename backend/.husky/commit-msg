@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+# Enforce English-only ASCII commit messages and Conventional Commits
+MSG_FILE=$1
+MSG=$(cat "$MSG_FILE")
+
+# 1) Conventional Commits via commitlint
+npx --yes commitlint --edit "$MSG_FILE"
+if [ $? -ne 0 ]; then
+  echo '
+❌ Commit message must follow Conventional Commits (e.g., feat:, fix:, chore:, refactor:, docs:, test:)'
+  exit 1
+fi
+
+# 2) ASCII-only (basic English characters)
+# allow common punctuation and brackets
+if printf '%s' "$MSG" | LC_ALL=C grep -n '[^ -~
+	]' >/dev/null; then
+  echo '
+❌ Commit message must be ASCII-only (English). Remove accents or non-ASCII characters.'
+  exit 1
+fi
+
+# 3) Optional: simple English word presence (heuristic) – ensure at least one a-z word
+if ! printf '%s' "$MSG" | grep -E -qi '[a-z]{2,}'; then
+  echo '
+❌ Commit message must contain English words.'
+  exit 1
+fi
+
+exit 0
