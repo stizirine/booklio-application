@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # --- FRONTEND (Point d'entrée unique) ---
   frontend:
-    build: ./booklio-app
+    build: ./frontend
     container_name: booklio-frontend
     restart: always
     ports:
@@ -15,7 +15,7 @@ services:
 
   # --- BACKEND (Caché derrière le front) ---
   booklio-backend:
-    build: ./booklio
+    build: ./backend
     container_name: booklio-api
     restart: always
     depends_on:
