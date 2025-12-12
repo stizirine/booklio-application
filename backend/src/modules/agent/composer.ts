@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { enUS, fr } from 'date-fns/locale.js';
+import { enUS, fr } from 'date-fns/locale';
 
 import type { MessageTemplate } from './templates.js';
 

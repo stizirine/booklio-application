@@ -1,23 +1,48 @@
-version: '3.8'
-
 services:
   # --- FRONTEND (Point d'entrée unique) ---
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # Variables d'environnement pour le build React
+        - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL:-/api}
+        - REACT_APP_X_API_KEY=${REACT_APP_X_API_KEY:-x-api-key}
+        - REACT_APP_REQUIRED_HEADER_VALUE=${REACT_APP_REQUIRED_HEADER_VALUE:-}
+        - REACT_APP_REQUIRED_HEADER_VALUE_PROD=${REACT_APP_REQUIRED_HEADER_VALUE_PROD:-}
+        - NODE_ENV=${NODE_ENV}
     container_name: booklio-frontend
     restart: always
     ports:
-      - "80:80" # C'est la seule porte d'entrée publique !
+      - "8080:80" # C'est la seule porte d'entrée publique !
+    volumes:
+      # Monter nginx.conf pour pouvoir le modifier sans rebuild
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - booklio-backend
     networks:
       - booklio-network
+          - traefik-public # On le connecte au réseau de Traefik
+    labels:
+      - "traefik.enable=true"
+      # Les règles de domaine
+      - "traefik.http.routers.booklio.rule=Host(`booklio.cloud`, `www.booklio.cloud`)"
+      # L'entrée sécurisée (que tu as confirmée être "websecure")
+      - "traefik.http.routers.booklio.entrypoints=websecure"
+      # Activation du HTTPS
+      - "traefik.http.routers.booklio.tls=true"
+      # --- LA CORRECTION EST ICI ---
+      - "traefik.http.routers.booklio.tls.certresolver=mytlschallenge"
+      # -----------------------------
+      # Le port interne de ton frontend (Nginx)
+      - "traefik.http.services.booklio.loadbalancer.server.port=80"  
 
   # --- BACKEND (Caché derrière le front) ---
   booklio-backend:
     build: ./backend
     container_name: booklio-api
     restart: always
+    env_file:
+      - .env
     depends_on:
       - mongo
       - redis
@@ -25,12 +50,17 @@ services:
       - NODE_ENV=${NODE_ENV}
       - PORT=${PORT}
       - BCRYPT_SALT_ROUNDS=${BCRYPT_SALT_ROUNDS}
-      # Connexion interne Docker
-      - MONGO_URI=mongodb://booklio:${MONGO_PASSWORD}@mongo:27017/booklio?authSource=admin
+      # Connexion interne Docker - le script d'entrypoint construira MONGO_URI depuis MONGO_PASSWORD si nécessaire
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_URI=${MONGO_URI:-}
       - REDIS_URL=redis://redis:6379
       # Variables secrètes injectées
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      # Configuration API Key Header (optionnel)
+      - REQUIRED_HEADER_NAME=${REQUIRED_HEADER_NAME:-x-api-key}
+      - REQUIRED_HEADER_VALUE=${REQUIRED_HEADER_VALUE:-}
+      - REQUIRED_HEADER_VALUE_PROD=${REQUIRED_HEADER_VALUE_PROD:-}
     networks:
       - booklio-network
     # PAS de ports exposé ici pour la sécurité
@@ -61,7 +91,7 @@ services:
     container_name: booklio-prometheus
     restart: unless-stopped
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./backend/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -82,6 +112,10 @@ services:
 networks:
   booklio-network:
     driver: bridge
+  # On déclare le réseau qui existe déjà sur ton serveur
+  traefik-public:
+    external: true
+    name: root_default
 
 volumes:
   mongo-data:

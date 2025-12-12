@@ -25,7 +25,10 @@ const getEnvConfig = () => {
   
   const config = {
     // Configuration de l'API
-    API_BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000',
+    // En production/Docker, utiliser une URL relative qui sera proxifiée par Nginx
+    // En développement, utiliser localhost:4000
+    API_BASE_URL: process.env.REACT_APP_API_BASE_URL || 
+      (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:4000'),
     
     // Configuration du mode API
     USE_MOCK_API: process.env.REACT_APP_USE_MOCK_API === 'true',
@@ -261,17 +264,17 @@ api.interceptors.request.use((config) => {
   const shouldAddApiKey = !excludedPaths.some(path => url.includes(path));
 
   // Ajouter le header x-api-key si nécessaire
+  // Le backend accepte n'importe quelle valeur si REQUIRED_HEADER_VALUE n'est pas défini
   if (shouldAddApiKey && envConfig.X_API_KEY_HEADER_NAME) {
-    if (envConfig.REQUIRED_HEADER_VALUE) {
-      const maybeAxiosHeaders = config.headers as any;
-      if (typeof maybeAxiosHeaders.set === 'function') {
-        maybeAxiosHeaders.set(envConfig.X_API_KEY_HEADER_NAME, envConfig.REQUIRED_HEADER_VALUE);
-      } else {
-        (config.headers as any)[envConfig.X_API_KEY_HEADER_NAME] = envConfig.REQUIRED_HEADER_VALUE;
-      }
-    } else if (envConfig.DEBUG_MODE) {
-      // eslint-disable-next-line no-console
-      console.warn(`[API] Header ${envConfig.X_API_KEY_HEADER_NAME} non ajouté: REQUIRED_HEADER_VALUE non défini pour l'environnement ${process.env.REACT_APP_ENV || process.env.NODE_ENV || 'development'}`);
+    // Utiliser la valeur depuis envConfig qui vient du .env via getHeaderValue()
+    // envConfig.REQUIRED_HEADER_VALUE est défini par getHeaderValue() qui lit
+    // REACT_APP_REQUIRED_HEADER_VALUE_PROD depuis le .env au moment du build
+    const headerValue = envConfig.REQUIRED_HEADER_VALUE || 'default-api-key';
+    const maybeAxiosHeaders = config.headers as any;
+    if (typeof maybeAxiosHeaders.set === 'function') {
+      maybeAxiosHeaders.set(envConfig.X_API_KEY_HEADER_NAME, headerValue);
+    } else {
+      (config.headers as any)[envConfig.X_API_KEY_HEADER_NAME] = headerValue;
     }
   }
 

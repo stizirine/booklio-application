@@ -2,7 +2,7 @@
   "name": "booklio-app",
   "version": "0.2.0",
   "private": true,
-  "homepage": "https://stizirine.github.io/booklio-app",
+  "homepage": "/",
   "dependencies": {
     "@headlessui/react": "^2.2.8",
     "@heroicons/react": "^2.2.0",
