@@ -25,7 +25,7 @@ services:
     labels:
       - "traefik.enable=true"
       # Les règles de domaine
-      - "traefik.http.routers.booklio.rule=Host(`booklio.cloud`, `www.booklio.cloud`)"
+      - "traefik.http.routers.booklio.rule=Host(`booklio.cloud`) || Host(`www.booklio.cloud`)"
       # L'entrée sécurisée (que tu as confirmée être "websecure")
       - "traefik.http.routers.booklio.entrypoints=websecure"
       # Activation du HTTPS
