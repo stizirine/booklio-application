@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 const SecretsSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).optional(),
+  // On accepte aussi staging/recette pour les environnements intermédiaires
+  NODE_ENV: z.enum(['development', 'test', 'staging', 'production', 'recette', 'rec']).optional(),
   PORT: z.string().regex(/^\d+$/).transform(Number).optional(),
 
   // Requis pour démarrer l'API

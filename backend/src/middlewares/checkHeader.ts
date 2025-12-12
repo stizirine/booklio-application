@@ -58,9 +58,17 @@ export function checkHeaderValue(headerName: string, expectedValue: string, erro
  * 2. REQUIRED_HEADER_VALUE_{ENV} (valeur spécifique à l'environnement)
  * 3. undefined (vérification de présence uniquement)
  */
+function normalizeEnv(nodeEnvRaw: string): 'development' | 'staging' | 'production' {
+  const env = (nodeEnvRaw || 'development').toLowerCase();
+  if (env === 'rec' || env === 'recette') return 'staging';
+  if (env === 'prod') return 'production';
+  if (env === 'staging' || env === 'production' || env === 'development') return env as 'development' | 'staging' | 'production';
+  return 'development';
+}
+
 function getExpectedHeaderValue(): string | undefined {
   const secrets = getSecrets();
-  const nodeEnv = process.env.NODE_ENV || 'development';
+  const nodeEnv = normalizeEnv(process.env.NODE_ENV || 'development');
 
   // Valeur globale (priorité la plus haute)
   if (secrets.REQUIRED_HEADER_VALUE) {

@@ -114,3 +114,98 @@ WHATSAPP_TWILIO_TOKEN=
 # Node env
 NODE_ENV=development
 ```
+
+## Exemples par environnement (Docker Compose)
+
+Ces blocs peuvent être copiés dans des fichiers séparés (ex: `.env.dev`, `.env.rec`, `.env.prod`).  
+Lancez ensuite `docker compose --env-file .env.dev up -d` (ou `ENV_FILE=.env.dev docker compose up -d` pour renseigner `env_file`).
+
+### Développement (`.env.dev`)
+```
+NODE_ENV=development
+PORT=4000
+
+# Mongo local
+MONGO_HOST=mongo
+MONGO_PORT=27017
+MONGO_USER=booklio
+MONGO_PASSWORD=dev_password_change_me
+MONGO_DB=booklio
+MONGO_AUTH_SOURCE=admin
+# Alternative: MONGO_URI=mongodb://booklio:dev_password_change_me@mongo:27017/booklio?authSource=admin
+
+REDIS_URL=redis://redis:6379
+JWT_ACCESS_SECRET=dev_access_secret_change_me
+JWT_REFRESH_SECRET=dev_refresh_secret_change_me
+BCRYPT_SALT_ROUNDS=12
+
+REQUIRED_HEADER_NAME=x-api-key
+REQUIRED_HEADER_VALUE_DEV=dev-key-12345
+REQUIRED_HEADER_VALUE=
+
+# Frontend build
+REACT_APP_API_BASE_URL=/api
+REACT_APP_X_API_KEY=x-api-key
+REACT_APP_REQUIRED_HEADER_VALUE_DEV=dev-key-12345
+REACT_APP_REQUIRED_HEADER_VALUE_PROD=
+```
+
+### Recette / Staging (`.env.rec`)
+> Utiliser `NODE_ENV=staging` (alias `rec`/`recette` accepté par l'API).
+```
+NODE_ENV=staging
+PORT=4000
+
+# Mongo recette (adapter host/credentials)
+MONGO_HOST=rec-mongo.internal
+MONGO_PORT=27017
+MONGO_USER=booklio
+MONGO_PASSWORD=rec_password_change_me
+MONGO_DB=booklio
+MONGO_AUTH_SOURCE=admin
+# Alternative: MONGO_URI=mongodb://booklio:rec_password_change_me@rec-mongo.internal:27017/booklio?authSource=admin
+
+REDIS_URL=redis://redis:6379
+JWT_ACCESS_SECRET=rec_access_secret_change_me
+JWT_REFRESH_SECRET=rec_refresh_secret_change_me
+BCRYPT_SALT_ROUNDS=12
+
+REQUIRED_HEADER_NAME=x-api-key
+REQUIRED_HEADER_VALUE_STAGING=rec-key-67890
+REQUIRED_HEADER_VALUE=
+
+# Frontend build
+REACT_APP_API_BASE_URL=/api
+REACT_APP_X_API_KEY=x-api-key
+REACT_APP_REQUIRED_HEADER_VALUE_PROD=
+REACT_APP_REQUIRED_HEADER_VALUE= # option globale
+REACT_APP_REQUIRED_HEADER_VALUE_STAGING=rec-key-67890
+```
+
+### Production (`.env.prod`)
+```
+NODE_ENV=production
+PORT=4000
+
+# Mongo production (hébergé/cluster)
+MONGO_HOST=prod-mongo.internal
+MONGO_PORT=27017
+MONGO_USER=booklio
+MONGO_PASSWORD=prod_password_change_me
+MONGO_DB=booklio
+MONGO_AUTH_SOURCE=admin
+# Alternative: MONGO_URI=mongodb+srv://booklio:prod_password_change_me@cluster.example.com/booklio?authSource=admin
+
+REDIS_URL=redis://redis:6379
+JWT_ACCESS_SECRET=prod_access_secret_change_me
+JWT_REFRESH_SECRET=prod_refresh_secret_change_me
+BCRYPT_SALT_ROUNDS=12
+
+REQUIRED_HEADER_NAME=x-api-key
+REQUIRED_HEADER_VALUE_PROD=prod-key-secret
+
+# Frontend build
+REACT_APP_API_BASE_URL=/api
+REACT_APP_X_API_KEY=x-api-key
+REACT_APP_REQUIRED_HEADER_VALUE_PROD=prod-key-secret
+```
