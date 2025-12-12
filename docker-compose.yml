@@ -21,7 +21,7 @@ services:
       - booklio-backend
     networks:
       - booklio-network
-          - traefik-public # On le connecte au réseau de Traefik
+      - traefik-public # On le connecte au réseau de Traefik
     labels:
       - "traefik.enable=true"
       # Les règles de domaine
