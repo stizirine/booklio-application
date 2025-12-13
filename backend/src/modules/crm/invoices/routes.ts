@@ -319,6 +319,9 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
             phone?: string;
           })
         : undefined;
+    // Récupérer les items depuis le document Mongoose
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoiceItems = (inv as any).items || [];
     return {
       _id: inv._id,
       tenantId: inv.tenantId,
@@ -338,7 +341,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
       currency: inv.currency,
       status: inv.status,
       notes: inv.notes,
-      items: inv.items || [],
+      items: Array.isArray(invoiceItems) ? invoiceItems : [],
       payments: inv.payments || [],
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
@@ -401,6 +404,9 @@ router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response)
   }
   const inv = await q;
   if (!inv) return res.status(404).json(handleNotFoundError('invoice'));
+  // Récupérer les items depuis le document Mongoose
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const invoiceItems = (inv as any).items || [];
   return res.json({
     invoice: {
       _id: inv._id,
@@ -430,7 +436,7 @@ router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response)
       currency: inv.currency,
       status: inv.status,
       notes: inv.notes,
-      items: inv.items || [],
+      items: Array.isArray(invoiceItems) ? invoiceItems : [],
       payments: inv.payments || [],
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
