@@ -34,7 +34,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({ id }) => {
   } = useOpticsInvoices({ autoFetch: false });
 
   // Services clients
-  const { selectedClient } = useClientServices();
+  const { selectedClient: _selectedClient } = useClientServices();
   
   // Hook pour le préremplissage depuis les prescriptions optiques - autoLoad désactivé
   const { prefill } = useOpticsInvoicePrefill({
@@ -55,9 +55,11 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({ id }) => {
       const loadInvoice = async () => {
         try {
           const invoice = await fetchInvoice(id);
-          setCurrentInvoice(invoice);
-          if (invoice.client?.id) {
-            setSelectedClientId(invoice.client.id);
+          if (invoice) {
+            setCurrentInvoice(invoice);
+            if (invoice.client?.id) {
+              setSelectedClientId(invoice.client.id);
+            }
           }
         } catch (err) {
           console.error('Erreur lors du chargement de la facture:', err);
