@@ -1,5 +1,6 @@
+import Icon from '@assets/icons/Icon';
 import VirtualizedList from '@components/VirtualizedList';
-import { Badge, Button, Card, Input } from '@components/ui';
+import { Button, Card, Input } from '@components/ui';
 import { useNotification } from '@contexts/NotificationContext';
 import { useClientServices } from '@features/clients/services';
 import React, { useEffect, useState } from 'react';
@@ -21,6 +22,7 @@ const OpticsInvoicesPage: React.FC = () => {
   const [editingMode, setEditingMode] = useState<'create' | 'edit' | 'view'>('create');
   const [search, setSearch] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
 
   // Hook pour l'API backend
   const {
@@ -31,9 +33,7 @@ const OpticsInvoicesPage: React.FC = () => {
     fetchInvoice,
     createInvoice,
     updateInvoice,
-    generatePDF,
-    canAccessOptics,
-    canPrintInvoices
+    canAccessOptics
   } = useOpticsInvoices();
 
   // Services clients
@@ -52,7 +52,36 @@ const OpticsInvoicesPage: React.FC = () => {
     prefill,
   });
 
-  // Debounce simple de la recherche
+  // Filtrer les factures par recherche (nom, prénom, téléphone, numéro)
+  // L'API filtre déjà par type='InvoiceClient', donc toutes les factures reçues sont optiques
+  useEffect(() => {
+    if (!search.trim()) {
+      // Si pas de recherche, afficher toutes les factures (déjà filtrées par l'API)
+      setFilteredInvoices(invoices);
+      return;
+    }
+
+    const searchLower = search.toLowerCase().trim();
+    
+    // Rechercher dans les factures par nom, prénom, téléphone ou numéro de facture
+    const filtered = invoices.filter((invoice) => {
+      // Rechercher dans le nom du client
+      const clientName = invoice.client?.name || '';
+      const nameMatch = clientName.toLowerCase().includes(searchLower);
+      
+      // Rechercher dans le téléphone
+      const phoneMatch = invoice.client?.phone?.toLowerCase().includes(searchLower) || false;
+      
+      // Rechercher dans le numéro de facture
+      const numberMatch = invoice.number?.toLowerCase().includes(searchLower) || false;
+      
+      return nameMatch || phoneMatch || numberMatch;
+    });
+    
+    setFilteredInvoices(filtered);
+  }, [search, invoices]);
+
+  // Debounce simple de la recherche de clients (pour l'autocomplétion)
   useEffect(() => {
     const id = setTimeout(() => {
       if (search.trim().length >= 2) {
@@ -73,16 +102,36 @@ const OpticsInvoicesPage: React.FC = () => {
     setShowEditor(true);
   };
 
-  const handleEditInvoice = (invoice: Invoice) => {
-    setCurrentInvoice(invoice);
-    setEditingMode('edit');
-    setShowEditor(true);
+  const handleEditInvoice = async (invoice: Invoice) => {
+    try {
+      // Récupérer la facture complète depuis l'API pour avoir toutes les données
+      const fullInvoice = await fetchInvoice(invoice.id);
+      setCurrentInvoice(fullInvoice || invoice);
+      setEditingMode('edit');
+      setShowEditor(true);
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la facture:', error);
+      // En cas d'erreur, utiliser la facture telle quelle
+      setCurrentInvoice(invoice);
+      setEditingMode('edit');
+      setShowEditor(true);
+    }
   };
 
-  const handleViewInvoice = (invoice: Invoice) => {
-    setCurrentInvoice(invoice);
-    setEditingMode('view');
-    setShowEditor(true);
+  const handleViewInvoice = async (invoice: Invoice) => {
+    try {
+      // Récupérer la facture complète depuis l'API pour avoir toutes les données
+      const fullInvoice = await fetchInvoice(invoice.id);
+      setCurrentInvoice(fullInvoice || invoice);
+      setEditingMode('view');
+      setShowEditor(true);
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la facture:', error);
+      // En cas d'erreur, utiliser la facture telle quelle
+      setCurrentInvoice(invoice);
+      setEditingMode('view');
+      setShowEditor(true);
+    }
   };
 
   const handleSaveInvoice = async (invoiceData: Partial<Invoice>) => {
@@ -145,37 +194,15 @@ const OpticsInvoicesPage: React.FC = () => {
   };
 
   const handlePrintInvoice = async (invoice: Invoice) => {
+    // Récupérer la facture complète depuis l'API pour avoir toutes les données
     try {
-      if (canPrintInvoices()) {
-        // Générer le PDF via l'API
-        const pdfBlob = await generatePDF(invoice.id);
-        const url = URL.createObjectURL(pdfBlob);
-        window.open(url, '_blank');
-      } else {
-        // Fallback: affichage de la facture pour impression
-        // Récupérer la facture complète depuis l'API pour avoir toutes les données
-        try {
-          const fullInvoice = await fetchInvoice(invoice.id);
-          setCurrentInvoice(fullInvoice || invoice);
-        } catch {
-          // Si la récupération échoue, utiliser la facture telle quelle
-          setCurrentInvoice(invoice);
-        }
-        setShowPrint(true);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la génération du PDF:', error);
-      // Fallback: affichage de la facture pour impression
-      // Récupérer la facture complète depuis l'API pour avoir toutes les données
-      try {
-        const fullInvoice = await fetchInvoice(invoice.id);
-        setCurrentInvoice(fullInvoice || invoice);
-      } catch {
-        // Si la récupération échoue, utiliser la facture telle quelle
-        setCurrentInvoice(invoice);
-      }
-      setShowPrint(true);
+      const fullInvoice = await fetchInvoice(invoice.id);
+      setCurrentInvoice(fullInvoice || invoice);
+    } catch {
+      // Si la récupération échoue, utiliser la facture telle quelle
+      setCurrentInvoice(invoice);
     }
+    setShowPrint(true);
   };
 
   const handleCloseEditor = () => {
@@ -190,12 +217,6 @@ const OpticsInvoicesPage: React.FC = () => {
     setCurrentInvoice(null);
   };
 
-  // Fonction utilitaire pour obtenir le variant Badge selon le statut
-  const getStatusBadgeVariant = (status: string): 'warning' | 'info' | 'success' => {
-    if (status === 'draft') return 'warning';
-    if (status === 'sent') return 'info';
-    return 'success';
-  };
 
   // Générer le prochain numéro de facture auto-incrémenté
   const getNextInvoiceNumber = (): string => {
@@ -236,30 +257,30 @@ const OpticsInvoicesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3">
         {/* En-tête sticky */}
-        <div className="sticky top-0 z-20 bg-gray-50 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 mb-3 sm:mb-4 border-b border-gray-200">
-          <div className="mb-3 sm:mb-4">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+        <div className="sticky top-0 z-20 bg-gray-50 -mx-2 sm:-mx-3 lg:-mx-4 px-2 sm:px-3 lg:px-4 pt-2 sm:pt-3 pb-2 mb-2 border-b border-gray-200">
+          <div className="mb-2">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-0.5">
               {t('invoices.opticsInvoices', { defaultValue: 'Factures Optiques' })}
             </h1>
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-[10px] sm:text-xs text-gray-600">
               {t('invoices.opticsInvoicesDescription', { defaultValue: 'Gestion des factures pour montures et corrections optiques' })}
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-4">
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-1">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-1.5 sm:gap-2">
+          <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2 flex-1">
             <div className="relative flex-1">
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t('invoices.searchClient', { defaultValue: 'Rechercher un client (nom, prénom)...' }) as string}
-                className="w-full sm:w-80"
+                placeholder={t('invoices.searchInvoice', { defaultValue: 'Rechercher par nom, prénom, téléphone ou numéro...' }) as string}
+                className="w-full sm:w-64 text-xs sm:text-sm h-8 sm:h-9"
               />
               {search.trim().length >= 2 && clients.length > 0 && (
-                <div className="absolute z-10 bg-white shadow rounded mt-1 w-full max-h-48 sm:max-h-60 overflow-auto">
+                <div className="absolute z-10 bg-white shadow-lg rounded mt-0.5 w-full max-h-40 sm:max-h-48 overflow-auto border border-gray-200">
                   {clients.map((c) => (
                     <button
                       key={c.id}
@@ -269,20 +290,23 @@ const OpticsInvoicesPage: React.FC = () => {
                         setSelectedClient(c as any);
                         setSearch(c.name);
                       }}
-                      className="block w-full text-left px-2.5 sm:px-3 py-1.5 sm:py-2 hover:bg-gray-50 text-xs sm:text-sm"
+                      className="block w-full text-left px-2 py-1.5 hover:bg-blue-50 text-xs transition-colors"
                     >
-                      {c.name} {c.phone ? `— ${c.phone}` : ''}
+                      <div className="font-medium text-gray-900">{c.name}</div>
+                      {c.phone && (
+                        <div className="text-[10px] text-gray-500">{c.phone}</div>
+                      )}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <Button onClick={handleCreateInvoice} variant="gradient" size="md" className="text-xs sm:text-sm">
+            <Button onClick={handleCreateInvoice} variant="gradient" size="sm" className="text-xs h-8 sm:h-9 px-3">
               {t('invoices.newInvoice', { defaultValue: 'Nouvelle facture' })}
             </Button>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => fetchInvoices()} variant="secondary" size="md" className="text-xs sm:text-sm">
+          <div className="flex gap-1.5">
+            <Button onClick={() => fetchInvoices()} variant="secondary" size="sm" className="text-xs h-8 sm:h-9 px-2">
               {t('common.refresh', { defaultValue: 'Actualiser' })}
             </Button>
           </div>
@@ -292,82 +316,127 @@ const OpticsInvoicesPage: React.FC = () => {
         {/* Liste des factures (virtualisée, layout en divs) */}
         <Card 
           className="overflow-hidden"
-          header={<h3 className="text-sm sm:text-base lg:text-lg font-medium text-gray-900">{t('invoices.recentInvoices', { defaultValue: 'Factures récentes' })}</h3>}
+          header={<h3 className="text-xs sm:text-sm font-semibold text-gray-900 py-1">{t('invoices.recentInvoices', { defaultValue: 'Factures récentes' })}</h3>}
         >
           {loading ? (
             <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-gray-500">{t('common.loading', { defaultValue: 'Chargement...' })}</div>
           ) : error ? (
             <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-red-500">{t('common.error', { defaultValue: 'Erreur' })}: {error}</div>
-          ) : invoices.length === 0 ? (
-            <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-gray-500">{t('invoices.noInvoicesFound', { defaultValue: 'Aucune facture trouvée' })}</div>
+          ) : filteredInvoices.length === 0 ? (
+            <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-gray-500">
+              {search.trim() 
+                ? t('invoices.noInvoicesFound', { defaultValue: 'Aucune facture trouvée' })
+                : t('invoices.noOpticsInvoicesFound', { defaultValue: 'Aucune facture optique trouvée' })
+              }
+            </div>
           ) : (
-            <div className="px-1.5 sm:px-2 py-1.5 sm:py-2">
-              <div className="hidden sm:grid grid-cols-6 gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 border border-gray-200 rounded-md">
-                <div>{t('invoices.number', { defaultValue: 'Numéro' })}</div>
-                <div>{t('invoices.client', { defaultValue: 'Client' })}</div>
-                <div>{t('invoices.date', { defaultValue: 'Date' })}</div>
-                <div>{t('invoices.amount', { defaultValue: 'Montant' })}</div>
-                <div>{t('invoices.statusLabel', { defaultValue: 'Statut' })}</div>
-                <div>{t('invoices.actions', { defaultValue: 'Actions' })}</div>
-              </div>
+            <div className="px-2 sm:px-3 py-2">
               <VirtualizedList
-                items={invoices}
-                rowHeight={64}
-                density="compact"
-                overscan={12}
-                className="max-h-[60vh] mt-1.5 sm:mt-2"
-                renderRow={(invoice) => (
-                  <div key={invoice.id || invoice.number} className="grid grid-cols-1 sm:grid-cols-6 gap-1.5 sm:gap-2 items-center border-b px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 hover:bg-gray-50">
-                    <div className="text-xs sm:text-sm font-medium text-gray-900">{invoice.number}</div>
-                    <div className="text-xs sm:text-sm text-gray-700 truncate">{invoice.client?.name || t('common.na', { defaultValue: 'N/A' })}</div>
-                    <div className="text-xs sm:text-sm text-gray-700">{invoice.issuedAt ? new Date(invoice.issuedAt).toLocaleDateString('fr-FR') : t('common.na', { defaultValue: 'N/A' })}</div>
-                    <div className="text-xs sm:text-sm text-gray-900 font-medium">{invoice.total} {invoice.currency}</div>
-                    <div>
-                      <Badge
-                        variant={getStatusBadgeVariant(invoice.status)}
-                        size="xs"
-                        className="sm:hidden"
-                      >
-                        {invoice.status === 'draft' ? t('invoices.status.draft', { defaultValue: 'Brouillon' }).substring(0, 3) : 
-                         invoice.status === 'sent' ? t('invoices.status.sent', { defaultValue: 'Envoyée' }).substring(0, 3) : t('invoices.status.paid', { defaultValue: 'Payée' }).substring(0, 3)}
-                      </Badge>
-                      <Badge
-                        variant={getStatusBadgeVariant(invoice.status)}
-                        size="sm"
-                        className="hidden sm:inline-flex"
-                      >
-                        {invoice.status === 'draft' ? t('invoices.status.draft', { defaultValue: 'Brouillon' }) : 
-                         invoice.status === 'sent' ? t('invoices.status.sent', { defaultValue: 'Envoyée' }) : t('invoices.status.paid', { defaultValue: 'Payée' })}
-                      </Badge>
+                items={filteredInvoices}
+                rowHeight={140}
+                density="default"
+                overscan={5}
+                className="h-[65vh]"
+                renderRow={(invoice) => {
+                  // Extraire les initiales du prénom et nom
+                  const getInitials = (name?: string): string => {
+                    if (!name) return '??';
+                    const parts = name.trim().split(/\s+/);
+                    if (parts.length >= 2) {
+                      return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+                    }
+                    return name.charAt(0).toUpperCase() + (name.charAt(1) || '').toUpperCase();
+                  };
+
+                  return (
+                    <div 
+                      key={invoice.id || invoice.number} 
+                      className="group bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 mb-3 overflow-hidden"
+                    >
+                      {/* Section principale avec informations */}
+                      <div className="flex items-start gap-4 p-4 border-b border-gray-100">
+                        {/* Avatar avec initiales Prénom Nom */}
+                        <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                          {getInitials(invoice.client?.name)}
+                        </div>
+                        
+                        {/* Informations client */}
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-2">
+                            <div className="text-base font-bold text-gray-900 mb-2">
+                              {invoice.client?.name || t('common.na', { defaultValue: 'N/A' })}
+                            </div>
+                            {invoice.client?.phone && (
+                              <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                                <Icon name="phone" size="sm" className="text-gray-500" />
+                                {invoice.client.phone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Montant et Date */}
+                        <div className="flex-shrink-0 text-right">
+                          <div className="mb-2">
+                            <div className="text-lg font-bold text-gray-900">
+                              {invoice.total?.toLocaleString('fr-FR')} {invoice.currency || 'MAD'}
+                            </div>
+                          </div>
+                          {invoice.issuedAt && (
+                            <div className="flex items-center justify-end gap-1.5 text-sm text-gray-500">
+                              <Icon name="calendar" size="sm" className="text-gray-400" />
+                              {new Date(invoice.issuedAt).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Section actions en bas */}
+                      <div className="flex items-center justify-end gap-2 p-3 bg-gray-50">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewInvoice(invoice);
+                          }}
+                          variant="secondary"
+                          size="sm"
+                          className="text-xs"
+                          leftIcon={<Icon name="eye" size="sm" />}
+                        >
+                          {t('invoices.view', { defaultValue: 'Voir' })}
+                        </Button>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditInvoice(invoice);
+                          }}
+                          variant="secondary"
+                          size="sm"
+                          className="text-xs"
+                          leftIcon={<Icon name="edit" size="sm" />}
+                        >
+                          {t('invoices.edit', { defaultValue: 'Edit' })}
+                        </Button>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePrintInvoice(invoice);
+                          }}
+                          variant="gradient"
+                          size="sm"
+                          className="text-xs"
+                          leftIcon={<Icon name="print" size="sm" />}
+                        >
+                          {t('invoices.print', { defaultValue: 'Print' })}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1 sm:gap-2">
-                      <Button
-                        onClick={() => handleViewInvoice(invoice)}
-                        variant="secondary"
-                        size="sm"
-                        className="text-[10px] sm:text-xs"
-                      >
-                        {t('invoices.view', { defaultValue: 'Consulter' })}
-                      </Button>
-                      <Button
-                        onClick={() => handleEditInvoice(invoice)}
-                        variant="secondary"
-                        size="sm"
-                        className="text-[10px] sm:text-xs"
-                      >
-                        {t('invoices.edit', { defaultValue: 'Modifier' })}
-                      </Button>
-                      <Button
-                        onClick={() => handlePrintInvoice(invoice)}
-                        variant="gradient"
-                        size="sm"
-                        className="text-[10px] sm:text-xs"
-                      >
-                        {t('invoices.print', { defaultValue: 'Imprimer' })}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                  );
+                }}
               />
             </div>
           )}
@@ -375,16 +444,22 @@ const OpticsInvoicesPage: React.FC = () => {
 
         {/* Éditeur de facture */}
         {showEditor && (
-          <OpticsInvoiceEditor
-            invoice={currentInvoice}
-            onSave={handleSaveInvoice}
-            onCancel={handleCloseEditor}
-            readOnly={editingMode === 'view'}
-            clientName={currentInvoice?.client?.name || prefill?.clientName}
-            initialFrameData={prefill?.frame}
-            initialLensData={prefill?.lens}
-            initialInvoiceNumber={editingMode === 'create' ? getNextInvoiceNumber() : undefined}
-          />
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+            <div className="flex items-center justify-center min-h-screen p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+                <OpticsInvoiceEditor
+                  invoice={currentInvoice}
+                  onSave={handleSaveInvoice}
+                  onCancel={handleCloseEditor}
+                  readOnly={editingMode === 'view'}
+                  clientName={currentInvoice?.client?.name || prefill?.clientName}
+                  initialFrameData={prefill?.frame}
+                  initialLensData={prefill?.lens}
+                  initialInvoiceNumber={editingMode === 'create' ? getNextInvoiceNumber() : undefined}
+                />
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Impression de facture */}
