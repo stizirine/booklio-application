@@ -260,67 +260,82 @@ const OpticsInvoicesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3">
-        {/* En-tête sticky */}
-        <div className="sticky top-0 z-20 bg-gray-50 -mx-2 sm:-mx-3 lg:-mx-4 px-2 sm:px-3 lg:px-4 pt-2 sm:pt-3 pb-2 mb-2 border-b border-gray-200">
-          <div className="mb-2">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-0.5">
-              {t('invoices.opticsInvoices', { defaultValue: 'Factures Optiques' })}
-            </h1>
-            <p className="text-[10px] sm:text-xs text-gray-600">
-              {t('invoices.opticsInvoicesDescription', { defaultValue: 'Gestion des factures pour montures et corrections optiques' })}
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-1.5 sm:gap-2">
-          <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2 flex-1">
-            <div className="relative flex-1">
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t('invoices.searchInvoice', { defaultValue: 'Rechercher par nom, prénom, téléphone ou numéro...' }) as string}
-                className="w-full sm:w-64 text-xs sm:text-sm h-8 sm:h-9"
-              />
-              {search.trim().length >= 2 && clients.length > 0 && (
-                <div className="absolute z-10 bg-white shadow-lg rounded mt-0.5 w-full max-h-40 sm:max-h-48 overflow-auto border border-gray-200">
-                  {clients.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedClientId(c.id);
-                        setSelectedClient(c as any);
-                        setSearch(c.name);
-                      }}
-                      className="block w-full text-left px-2 py-1.5 hover:bg-blue-50 text-xs transition-colors"
-                    >
-                      <div className="font-medium text-gray-900">{c.name}</div>
-                      {c.phone && (
-                        <div className="text-[10px] text-gray-500">{c.phone}</div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
+      <div className="w-full">
+        {/* Header sticky */}
+        <div className="sticky top-0 z-30 bg-gray-50 border-b border-gray-200 shadow-sm">
+          <div className="px-4 sm:px-6 py-4 sm:py-6">
+            {/* En-tête avec titre et description */}
+            <div className="mb-6">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                {t('invoices.opticsInvoices', { defaultValue: 'Factures Optiques' })}
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                {t('invoices.opticsInvoicesDescription', { defaultValue: 'Gestion des factures pour montures et corrections optiques' })}
+              </p>
             </div>
-            <Button onClick={handleCreateInvoice} variant="gradient" size="sm" className="text-xs h-8 sm:h-9 px-3">
-              {t('invoices.newInvoice', { defaultValue: 'Nouvelle facture' })}
-            </Button>
-          </div>
-          <div className="flex gap-1.5">
-            <Button onClick={() => fetchInvoices()} variant="secondary" size="sm" className="text-xs h-8 sm:h-9 px-2">
-              {t('common.refresh', { defaultValue: 'Actualiser' })}
-            </Button>
-          </div>
+
+            {/* Barre de recherche */}
+            <div className="mb-4">
+              <div className="relative">
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t('invoices.searchInvoice', { defaultValue: 'Rechercher par nom, prénom, téléphone ou numéro...' }) as string}
+                  className="w-full bg-white rounded-lg border border-gray-200 text-sm sm:text-base h-11 sm:h-12 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {search.trim().length >= 2 && clients.length > 0 && (
+                  <div className="absolute z-40 bg-white shadow-lg rounded-lg mt-1 w-full max-h-48 overflow-auto border border-gray-200">
+                    {clients.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedClientId(c.id);
+                          setSelectedClient(c as any);
+                          setSearch(c.name);
+                        }}
+                        className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900 text-sm">{c.name}</div>
+                        {c.phone && (
+                          <div className="text-xs text-gray-500 mt-0.5">{c.phone}</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                onClick={() => fetchInvoices()} 
+                variant="secondary" 
+                size="md"
+                className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2.5 rounded-lg"
+              >
+                {t('common.refresh', { defaultValue: 'Actualiser' })}
+              </Button>
+              <Button 
+                onClick={handleCreateInvoice} 
+                variant="gradient" 
+                size="md"
+                className="w-full sm:flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+              >
+                {t('invoices.newInvoice', { defaultValue: 'Nouvelle facture' })}
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Liste des factures (virtualisée, layout en divs) */}
-        <Card 
-          className="overflow-hidden"
-          header={<h3 className="text-xs sm:text-sm font-semibold text-gray-900 py-1">{t('invoices.recentInvoices', { defaultValue: 'Factures récentes' })}</h3>}
-        >
+        {/* Contenu scrollable */}
+        <div className="px-4 sm:px-6 py-4 sm:py-6">
+
+          {/* Liste des factures (virtualisée, layout en divs) */}
+          <Card 
+            className="overflow-hidden w-full"
+          >
           {loading ? (
             <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-gray-500">{t('common.loading', { defaultValue: 'Chargement...' })}</div>
           ) : error ? (
@@ -333,7 +348,7 @@ const OpticsInvoicesPage: React.FC = () => {
               }
             </div>
           ) : (
-            <div className="px-2 sm:px-3 py-2">
+            <div className="w-full py-2">
               <VirtualizedList
                 items={filteredInvoices}
                 rowHeight={140}
@@ -354,7 +369,7 @@ const OpticsInvoicesPage: React.FC = () => {
                   return (
                     <div 
                       key={invoice.id || invoice.number} 
-                      className="group bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 mb-3 overflow-hidden"
+                      className="group bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 mb-3 overflow-hidden w-full"
                     >
                       {/* Section principale avec informations */}
                       <div className="flex items-start gap-4 p-4 border-b border-gray-100">
@@ -465,14 +480,15 @@ const OpticsInvoicesPage: React.FC = () => {
           </div>
         )}
 
-        {/* Impression de facture */}
-        {showPrint && currentInvoice ? (
-          <OpticsInvoicePrint
-            invoice={currentInvoice}
-            client={clientDataForPrint}
-            onClose={handleClosePrint}
-          />
-        ) : null}
+          {/* Impression de facture */}
+          {showPrint && currentInvoice ? (
+            <OpticsInvoicePrint
+              invoice={currentInvoice}
+              client={clientDataForPrint}
+              onClose={handleClosePrint}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );
