@@ -1,5 +1,5 @@
 import api from '@services/api';
-import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload, mapApiInvoiceToInvoice, ApiInvoice, InvoiceCreateResponse } from '../types';
+import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload, mapApiInvoiceToInvoice, InvoiceCreateResponse } from '../types';
 
 // Types spécifiques pour les factures optiques
 export interface OpticsInvoiceItem {
