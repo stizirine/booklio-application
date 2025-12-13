@@ -85,6 +85,13 @@ const invoiceSchema = new Schema(
       required: true,
       index: true,
     },
+    type: { 
+      type: String, 
+      enum: ['InvoiceClient', 'Invoice'], 
+      required: false, 
+      default: 'Invoice',
+      index: true 
+    },
     prescriptionId: { type: Schema.Types.ObjectId, ref: 'OpticalPrescription', required: false },
     prescriptionSnapshot: {
       type: new Schema<PrescriptionSnapshot>(

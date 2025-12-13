@@ -135,6 +135,7 @@ const createSchema = z.object({
       message: 'clientId must be a valid MongoDB ObjectId',
     }
   ),
+  type: z.enum(['InvoiceClient', 'Invoice']).optional().default('Invoice'),
   totalAmount: z.number().min(0),
   advanceAmount: z.number().min(0).default(0),
   creditAmount: z.number().min(0).default(0),
@@ -282,6 +283,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
   const current = req.user!;
   const {
     clientId,
+    type,
     limit = '20',
     page = '1',
     sort = '-createdAt',
@@ -292,6 +294,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
   } = req.query as Record<string, string | undefined>;
   const filter: Record<string, unknown> = { tenantId: current.tenantId };
   if (clientId) filter.clientId = clientId;
+  if (type) filter.type = type;
   if (onlyDeleted === 'true') filter.deletedAt = { $ne: null };
   else if (includeDeleted === 'true') {
     /* no filter */

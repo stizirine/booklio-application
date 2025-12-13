@@ -1,5 +1,5 @@
 import api from '@services/api';
-import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload, mapApiInvoiceToInvoice, InvoiceCreateResponse } from '../types';
+import { Invoice, InvoiceCreatePayload, InvoiceCreateResponse, InvoiceUpdatePayload, mapApiInvoiceToInvoice } from '../types';
 
 // Types spécifiques pour les factures optiques
 export interface OpticsInvoiceItem {
@@ -40,6 +40,7 @@ export interface OpticsInvoiceItem {
 
 export interface OpticsInvoiceCreatePayload extends Omit<InvoiceCreatePayload, 'items'> {
   items: OpticsInvoiceItem[];
+  type?: 'InvoiceClient' | 'Invoice'; // Type de facture pour identifier les factures optiques
   // Informations spécifiques à l'optique
   prescriptionId?: string; // ID de la prescription optique
   prescriptionSnapshot?: {
@@ -154,10 +155,18 @@ export const opticsInvoicesApi = {
     limit?: number;
   }): Promise<Invoice[]> {
     // Les factures optiques utilisent le même endpoint que les factures normales
+    // Filtrer par type 'InvoiceClient' pour ne récupérer que les factures optiques
     const response = await api.get('/v1/invoices', { 
-      params
+      params: {
+        ...params,
+        type: 'InvoiceClient'
+      }
     });
-    return response.data;
+    const data = response.data;
+    // L'API peut retourner soit un objet avec { items: [...], page, pages, total }
+    // soit directement un tableau
+    const list: any[] = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+    return list.map(mapApiInvoiceToInvoice);
   },
 
   /**
@@ -165,7 +174,10 @@ export const opticsInvoicesApi = {
    */
   async getOpticsInvoice(id: string): Promise<Invoice> {
     const response = await api.get(`/v1/invoices/${id}`);
-    return response.data;
+    const data = response.data;
+    // L'API peut retourner soit { invoice: {...} } soit directement l'invoice
+    const invoiceData = data?.invoice || data;
+    return mapApiInvoiceToInvoice(invoiceData);
   },
 
   /**
@@ -183,7 +195,10 @@ export const opticsInvoicesApi = {
    */
   async updateOpticsInvoice(id: string, payload: OpticsInvoiceUpdatePayload): Promise<Invoice> {
     const response = await api.patch(`/v1/invoices/${id}`, payload);
-    return response.data;
+    const data = response.data;
+    // L'API peut retourner soit { invoice: {...} } soit directement l'invoice
+    const invoiceData = data?.invoice || data;
+    return mapApiInvoiceToInvoice(invoiceData);
   },
 
   /**
@@ -220,7 +235,10 @@ export const opticsInvoicesApi = {
     notes?: string;
   }): Promise<Invoice> {
     const response = await api.post(`/v1/invoices/${id}/payments`, paymentData);
-    return response.data;
+    const data = response.data;
+    // L'API peut retourner soit { invoice: {...} } soit directement l'invoice
+    const invoiceData = data?.invoice || data;
+    return mapApiInvoiceToInvoice(invoiceData);
   },
 
   /**

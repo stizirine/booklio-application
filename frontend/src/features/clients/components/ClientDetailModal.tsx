@@ -695,7 +695,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
                   leftIcon={<Icon name="plus" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                 >
                   <span className="hidden sm:inline">{t('invoices.newOpticsInvoice', { defaultValue: 'Nouvelle facture optique' })}</span>
-                  <span className="sm:hidden">+ Nouvelle facture</span>
+                  <span className="sm:hidden">Nouvelle facture</span>
                 </Button>
               </div>
               

@@ -104,6 +104,7 @@ export function transformToCreatePayload(invoiceData: Partial<Invoice>, clientId
 
   return {
     clientId: finalClientId,
+    type: 'InvoiceClient' as const,
     totalAmount: invoiceData.total || 0,
     currency: 'MAD',
     notes: {

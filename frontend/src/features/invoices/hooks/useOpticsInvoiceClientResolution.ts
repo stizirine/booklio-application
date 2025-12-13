@@ -23,23 +23,33 @@ export function useOpticsInvoiceClientResolution({
 }: UseOpticsInvoiceClientResolutionProps): ClientDataForPrint | undefined {
   const { clients, selectedClient } = useClientServices();
 
+  // Utiliser useMemo avec des dépendances stables pour éviter les boucles infinies
+  // Ne dépendre que des IDs et des valeurs primitives, pas des tableaux/objets qui changent
+  const selectedClientIdStable = selectedClientId;
+  const invoiceClientId = invoice?.client?.id;
+  const invoiceClientName = invoice?.client?.name;
+  const prefillClientName = prefill?.clientName;
+  const selectedClientIdValue = selectedClient?.id;
+  const selectedClientName = selectedClient?.name;
+  const selectedClientAddress = selectedClient?.address;
+
   return useMemo(() => {
     if (!invoice) return undefined;
 
     // 1. Essayer d'abord par selectedClientId (le plus fiable après création)
-    const clientFromSelectedId: Client | undefined = selectedClientId
-      ? clients.find(c => c.id === selectedClientId)
+    const clientFromSelectedId: Client | undefined = selectedClientIdStable
+      ? clients.find(c => c.id === selectedClientIdStable)
       : undefined;
 
     // 2. Ensuite par l'id du client dans la facture
-    const clientFromInvoiceId: Client | undefined = !clientFromSelectedId && invoice.client?.id
-      ? clients.find(c => c.id === invoice.client!.id)
+    const clientFromInvoiceId: Client | undefined = !clientFromSelectedId && invoiceClientId
+      ? clients.find(c => c.id === invoiceClientId)
       : undefined;
 
     // 3. Puis par nom du client dans la facture (avec correspondance partielle)
-    const clientFromInvoiceName: Client | undefined = !clientFromSelectedId && !clientFromInvoiceId && invoice.client?.name
+    const clientFromInvoiceName: Client | undefined = !clientFromSelectedId && !clientFromInvoiceId && invoiceClientName
       ? clients.find(c => {
-          const invoiceName = invoice.client!.name || '';
+          const invoiceName = invoiceClientName || '';
           return c.name === invoiceName || 
                  c.name.includes(invoiceName) || 
                  invoiceName.includes(c.name);
@@ -51,7 +61,7 @@ export function useOpticsInvoiceClientResolution({
     const sourceClient: Client | undefined = clientFromSelectedId
       || clientFromInvoiceId
       || clientFromInvoiceName
-      || (selectedClient as Client | undefined)
+      || (selectedClientIdValue && selectedClient ? selectedClient as Client : undefined)
       || (clients.length > 0 ? clients[0] : undefined);
 
     // Construire les données du client pour l'impression
@@ -65,19 +75,19 @@ export function useOpticsInvoiceClientResolution({
     }
 
     // Fallback: utiliser prefill si disponible
-    if (prefill?.clientName) {
+    if (prefillClientName) {
       return {
-        name: prefill.clientName,
-        address: selectedClient?.address,
+        name: prefillClientName,
+        address: selectedClientAddress,
         ssn: undefined,
         birthDate: undefined,
       };
     }
 
     // Dernier recours: utiliser juste le nom depuis la facture
-    if (invoice.client?.name) {
+    if (invoiceClientName) {
       return {
-        name: invoice.client.name,
+        name: invoiceClientName,
         address: undefined,
         ssn: undefined,
         birthDate: undefined,
@@ -85,6 +95,8 @@ export function useOpticsInvoiceClientResolution({
     }
 
     return undefined;
-  }, [invoice, selectedClientId, clients, selectedClient, prefill]);
+    // Dépendre uniquement des valeurs primitives pour éviter les re-calculs inutiles
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice?.id, selectedClientIdStable, invoiceClientId, invoiceClientName, prefillClientName, selectedClientIdValue, selectedClientName, selectedClientAddress]);
 }
 

@@ -95,17 +95,54 @@ const ClientDetailPage: React.FC = () => {
     autoFetch: false 
   });
   
+  // Extraire les fonctions nécessaires pour éviter les dépendances qui changent
+  const fetchOpticsInvoices = opticsInvoicesHook.fetchInvoices;
+  const updateOpticsInvoice = opticsInvoicesHook.updateInvoice;
+  const opticsInvoices = opticsInvoicesHook.invoices;
+  
+  // Utiliser une ref pour stabiliser la fonction fetchInvoices et éviter les boucles infinies
+  const fetchOpticsInvoicesRef = useRef(fetchOpticsInvoices);
+  useEffect(() => {
+    fetchOpticsInvoicesRef.current = fetchOpticsInvoices;
+  }, [fetchOpticsInvoices]);
+  
   // Hook pour le préremplissage depuis les prescriptions optiques
-  const { prefill: opticsInvoicePrefill, resetPrefill } = useOpticsInvoicePrefill({
+  // autoLoad désactivé pour éviter la boucle infinie - on chargera manuellement
+  const { prefill: opticsInvoicePrefill, resetPrefill, loadPrefill } = useOpticsInvoicePrefill({
     selectedClientId: client?.id || null,
-    autoLoad: showOpticsInvoiceEditor,
+    autoLoad: false,
   });
   
+  // Stabiliser les fonctions avec useRef pour éviter les boucles infinies
+  // Mettre à jour les refs directement dans le render (pas dans useEffect) pour éviter les boucles
+  const loadPrefillRef = useRef(loadPrefill);
+  const resetPrefillRef = useRef(resetPrefill);
+  const isLoadingPrefillRef = useRef(false);
+  
+  // Mettre à jour les refs directement (synchronisé avec le render)
+  loadPrefillRef.current = loadPrefill;
+  resetPrefillRef.current = resetPrefill;
+  
+  // Charger le préremplissage uniquement quand la modal s'ouvre
+  // Utiliser une ref pour suivre si on a déjà chargé pour cette ouverture
+  const lastEditorOpenRef = useRef(false);
   useEffect(() => {
-    if (!showOpticsInvoiceEditor) {
-      resetPrefill();
+    const wasOpen = lastEditorOpenRef.current;
+    const isOpen = showOpticsInvoiceEditor;
+    lastEditorOpenRef.current = isOpen;
+    
+    // Ne charger que si l'éditeur vient de s'ouvrir (transition de false à true)
+    if (isOpen && !wasOpen && client?.id && !isLoadingPrefillRef.current) {
+      isLoadingPrefillRef.current = true;
+      loadPrefillRef.current().finally(() => {
+        isLoadingPrefillRef.current = false;
+      });
+    } else if (!isOpen && wasOpen) {
+      // Ne réinitialiser que si l'éditeur vient de se fermer (transition de true à false)
+      resetPrefillRef.current();
     }
-  }, [showOpticsInvoiceEditor, resetPrefill]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showOpticsInvoiceEditor, client?.id]);
   
   const opticsInvoiceClientData = useOpticsInvoiceClientResolution({
     invoice: currentOpticsInvoice,
@@ -221,14 +258,14 @@ const ClientDetailPage: React.FC = () => {
         setShowOpticsInvoicePrint(true);
       } else if (opticsInvoiceEditingMode === 'edit' && currentOpticsInvoice) {
         const payload = transformToUpdatePayload(invoiceData, currentOpticsInvoice);
-        const updatedInvoice = await opticsInvoicesHook.updateInvoice(currentOpticsInvoice.id, payload);
+        const updatedInvoice = await updateOpticsInvoice(currentOpticsInvoice.id, payload);
         setCurrentOpticsInvoice(updatedInvoice);
         setShowOpticsInvoiceEditor(false);
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la facture optique:', error);
     }
-  }, [opticsInvoiceEditingMode, client, currentOpticsInvoice, opticsInvoicesHook]);
+  }, [opticsInvoiceEditingMode, client, currentOpticsInvoice, updateOpticsInvoice]);
 
   const handleCloseOpticsInvoiceEditor = useCallback(() => {
     setShowOpticsInvoiceEditor(false);
@@ -241,7 +278,7 @@ const ClientDetailPage: React.FC = () => {
   }, []);
 
   const getNextOpticsInvoiceNumber = useCallback((): string => {
-    const invoices = opticsInvoicesHook.invoices || [];
+    const invoices = opticsInvoices || [];
     const nums = invoices
       .map(inv => inv.number)
       .filter((n): n is string => typeof n === 'string' && n.trim().length > 0)
@@ -260,14 +297,25 @@ const ClientDetailPage: React.FC = () => {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     return `${y}${m}001`;
-  }, [opticsInvoicesHook.invoices]);
+  }, [opticsInvoices]);
 
   const handleCreateOpticsInvoice = useCallback(async () => {
-    await opticsInvoicesHook.fetchInvoices();
+    // Éviter les appels multiples si l'éditeur est déjà ouvert
+    if (showOpticsInvoiceEditor) {
+      return;
+    }
+    
+    // Ouvrir l'éditeur immédiatement
     setCurrentOpticsInvoice(null);
     setOpticsInvoiceEditingMode('create');
     setShowOpticsInvoiceEditor(true);
-  }, [opticsInvoicesHook]);
+    
+    // Recharger les factures en arrière-plan (non-bloquant) pour avoir le bon numéro
+    // Ne pas attendre pour éviter de bloquer l'ouverture de l'éditeur
+    fetchOpticsInvoicesRef.current().catch(err => {
+      console.warn('Erreur lors du rechargement des factures:', err);
+    });
+  }, [showOpticsInvoiceEditor]); // Dépendre uniquement de showOpticsInvoiceEditor pour éviter les appels multiples
 
   const _handleCreateInvoice = useCallback(() => {
     if (!client?.id) return;

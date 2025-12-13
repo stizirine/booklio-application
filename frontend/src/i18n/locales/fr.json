@@ -180,7 +180,8 @@
     "infoTab": "Infos",
     "appointmentsTab": "RDV",
     "invoicesTab": "Factures",
-    "opticsTab": "Optique"
+    "opticsTab": "Optique",
+    "opticsFile": "Dossier Optique"
   },
   "common": {
     "share": "Partager",
@@ -340,7 +341,7 @@
     "totalInvoiced": "Total facturé",
     "loadingSummary": "Chargement...",
     "create": "Créer une facture",
-    "edit": "Modifier la facture",
+    "edit": "Modifier",
     "for": "Pour",
     "currency": "Devise",
     "notes": "Notes",
@@ -355,6 +356,7 @@
     "invoiceNumber": "Numéro de facture",
     "invoiceNumberPlaceholder": "0002091",
     "date": "Date",
+    "client": "Client",
     "clientNamePlaceholder": "Nom du client",
     "frame": "Monture",
     "lenses": "Verres",
