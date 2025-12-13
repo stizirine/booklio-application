@@ -125,7 +125,7 @@ export const opticsInvoicesApi = {
    * Récupérer une facture optique par ID
    */
   async getOpticsInvoice(id: string): Promise<Invoice> {
-    const response = await api.get(`/v1/optician/invoices/${id}`);
+    const response = await api.get(`/v1/invoices/${id}`);
     return response.data;
   },
 
@@ -133,8 +133,8 @@ export const opticsInvoicesApi = {
    * Créer une nouvelle facture optique
    */
   async createOpticsInvoice(payload: OpticsInvoiceCreatePayload): Promise<Invoice> {
-    // Utiliser l'endpoint spécifique aux factures optiques
-    const response = await api.post('/v1/optician/invoices', payload);
+    // Les factures optiques utilisent le même endpoint que les factures normales
+    const response = await api.post('/v1/invoices', payload);
     return response.data;
   },
 
@@ -142,7 +142,7 @@ export const opticsInvoicesApi = {
    * Mettre à jour une facture optique
    */
   async updateOpticsInvoice(id: string, payload: OpticsInvoiceUpdatePayload): Promise<Invoice> {
-    const response = await api.patch(`/v1/optician/invoices/${id}`, payload);
+    const response = await api.patch(`/v1/invoices/${id}`, payload);
     return response.data;
   },
 
@@ -150,14 +150,14 @@ export const opticsInvoicesApi = {
    * Supprimer une facture optique
    */
   async deleteOpticsInvoice(id: string): Promise<void> {
-    await api.delete(`/v1/optician/invoices/${id}`);
+    await api.delete(`/v1/invoices/${id}`);
   },
 
   /**
    * Générer un PDF pour une facture optique
    */
   async generateOpticsInvoicePDF(id: string): Promise<Blob> {
-    const response = await api.get(`/v1/optician/invoices/${id}/pdf`, {
+    const response = await api.get(`/v1/invoices/${id}/pdf`, {
       responseType: 'blob'
     });
     return response.data;
@@ -167,7 +167,7 @@ export const opticsInvoicesApi = {
    * Envoyer une facture optique par email
    */
   async sendOpticsInvoice(id: string, email: string): Promise<void> {
-    await api.post(`/v1/optician/invoices/${id}/send`, { email });
+    await api.post(`/v1/invoices/${id}/send`, { email });
   },
 
   /**
@@ -179,7 +179,7 @@ export const opticsInvoicesApi = {
     reference?: string;
     notes?: string;
   }): Promise<Invoice> {
-    const response = await api.post(`/v1/optician/invoices/${id}/payments`, paymentData);
+    const response = await api.post(`/v1/invoices/${id}/payments`, paymentData);
     return response.data;
   },
 
@@ -196,7 +196,7 @@ export const opticsInvoicesApi = {
     pendingInvoices: number;
     averageAmount: number;
   }> {
-    const response = await api.get('/v1/optician/invoices/stats', { 
+    const response = await api.get('/v1/invoices/stats', { 
       params: {
         ...params,
         type: 'optics'
