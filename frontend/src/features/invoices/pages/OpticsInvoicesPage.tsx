@@ -181,6 +181,9 @@ const OpticsInvoicesPage: React.FC = () => {
         const updatedInvoice = await updateInvoice(currentInvoice.id, payload);
         setCurrentInvoice(updatedInvoice);
         setShowEditor(false);
+        
+        // Rafraîchir la liste des factures
+        await fetchInvoices();
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);

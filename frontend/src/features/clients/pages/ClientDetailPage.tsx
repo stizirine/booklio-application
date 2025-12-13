@@ -351,7 +351,7 @@ const ClientDetailPage: React.FC = () => {
       
       if (client?.id) {
         await refreshClientData();
-        await fetchInvoices({ clientId: client.id });
+        await fetchInvoices({ clientId: client.id, type: 'Invoice' });
       }
     } catch (error) {
       showError(t('invoices.createError'), t('invoices.createErrorMessage'));
@@ -377,7 +377,7 @@ const ClientDetailPage: React.FC = () => {
       
       if (client?.id) {
         await refreshClientData();
-        await fetchInvoices({ clientId: client.id });
+        await fetchInvoices({ clientId: client.id, type: 'Invoice' });
       }
     } catch (error) {
       showError(t('invoices.sendError'), t('invoices.sendErrorMessage'));
@@ -403,7 +403,7 @@ const ClientDetailPage: React.FC = () => {
           
           if (client?.id) {
             await refreshClientData();
-            await fetchInvoices({ clientId: client.id });
+            await fetchInvoices({ clientId: client.id, type: 'Invoice' });
           }
         } catch (error) {
           showError(t('invoices.deleteError'), t('invoices.deleteErrorMessage'));
@@ -432,7 +432,7 @@ const ClientDetailPage: React.FC = () => {
       
       if (client?.id) {
         await refreshClientData();
-        await fetchInvoices({ clientId: client.id });
+        await fetchInvoices({ clientId: client.id, type: 'Invoice' });
       }
     } catch (error) {
       showError(t('invoices.payment.addError'), t('invoices.payment.addErrorMessage'));
@@ -449,7 +449,7 @@ const ClientDetailPage: React.FC = () => {
       await deletePaymentAction(selectedInvoice.id, paymentId);
       
       if (client?.id) {
-        await fetchInvoices({ clientId: client.id });
+        await fetchInvoices({ clientId: client.id, type: 'Invoice' });
         await refreshClientData();
       }
       

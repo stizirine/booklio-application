@@ -351,7 +351,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
           
           // Rafraîchir les factures
           if (client?.id) {
-            await invoicesHook.fetchInvoices({ clientId: client.id });
+            await invoicesHook.fetchInvoices({ clientId: client.id, type: 'Invoice' });
           }
           
           // Rafraîchir les données du client depuis le backend

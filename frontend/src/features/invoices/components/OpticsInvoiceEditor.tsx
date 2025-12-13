@@ -1,7 +1,7 @@
 import { useClientServices } from '@features/clients/services';
 import { useOpticsStore } from '@features/optics/store/opticsStore';
 import { useFormMode } from '@hooks/useFormMode';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOpticsInvoiceEditor } from '../hooks/useOpticsInvoiceEditor';
 import { Invoice } from '../types';
@@ -88,17 +88,133 @@ const OpticsInvoiceEditor: React.FC<OpticsInvoiceEditorProps> = ({
   // Services clients et prescriptions
   const { clients, searchClients } = useClientServices();
   const opticsStore = useOpticsStore();
+  
+  // État local pour stocker les résultats de recherche uniquement
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string; phone?: string }>>([]);
+  const [lastSearchQuery, setLastSearchQuery] = useState<string>('');
+
+  // Fonction pour initialiser automatiquement un client unique
+  const initializeSingleClient = useCallback((singleClient: { id: string; name: string }) => {
+    setClientName(singleClient.name);
+    setSelectedClientId(singleClient.id);
+    // Préremplir depuis dernière prescription
+    opticsStore.fetchByClient(singleClient.id)
+      .then(recs => {
+        const latest = recs.sort((a, b) => (new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))[0];
+        if (latest) {
+          setFrameData(prev => ({
+            ...prev,
+            material: latest.frameMaterial || prev.material,
+          }));
+          setLensData(prev => ({
+            ...prev,
+            index: latest.index || prev.index,
+            treatment: Array.isArray(latest.treatments) ? (latest.treatments[0] || prev.treatment) : prev.treatment,
+            rightEye: {
+              sphere: latest.sphereRight || '',
+              cylinder: latest.cylinderRight || '',
+              axis: latest.axisRight || '',
+              add: prev.rightEye.add
+            },
+            leftEye: {
+              sphere: latest.sphereLeft || '',
+              cylinder: latest.cylinderLeft || '',
+              axis: latest.axisLeft || '',
+              add: prev.leftEye.add
+            },
+            pd: (latest.pd as any) ?? prev.pd,
+          }));
+        }
+      })
+      .catch(() => {
+        // silencieux
+      });
+  }, [setClientName, setSelectedClientId, setFrameData, setLensData, opticsStore]);
 
   // Déclencher la recherche sur saisie du champ Client (création uniquement)
   useEffect(() => {
     if (isReadOnly) return;
-    const id = setTimeout(() => {
-      if (clientName && clientName.trim().length >= 2 && !selectedClientId) {
-        searchClients(clientName).catch(() => {});
+    
+    // Réinitialiser les résultats si le champ est vide ou si un client est déjà sélectionné
+    if (!clientName || clientName.trim().length === 0 || selectedClientId) {
+      setSearchResults([]);
+      setLastSearchQuery('');
+      return;
+    }
+    
+    const searchQuery = clientName.trim();
+    
+    // Ne pas rechercher si moins de 2 caractères
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setLastSearchQuery('');
+      return;
+    }
+    
+    const id = setTimeout(async () => {
+      // Éviter les recherches inutiles si la requête n'a pas changé
+      if (searchQuery === lastSearchQuery) {
+        return;
+      }
+      
+      setLastSearchQuery(searchQuery);
+      const queryLower = searchQuery.toLowerCase();
+      
+      // 1. PRIORITÉ : Chercher d'abord dans le store (clients déjà chargés)
+      const storeResults = clients.filter(c => {
+        const name = (c.name || '').toLowerCase();
+        const phone = (c.phone || '').toLowerCase();
+        return name.includes(queryLower) || phone.includes(queryLower);
+      });
+      
+      // Si on a des résultats dans le store, les utiliser directement
+      if (storeResults.length > 0) {
+        const formattedResults = storeResults.map(c => ({
+          id: c.id,
+          name: c.name,
+          phone: c.phone
+        }));
+        setSearchResults(formattedResults);
+        
+        // Si un seul résultat dans le store, l'initialiser automatiquement
+        if (formattedResults.length === 1 && !selectedClientId) {
+          initializeSingleClient(formattedResults[0]);
+        }
+        // Pas besoin d'appel API si on a déjà des résultats dans le store
+      } else {
+        // 2. Si pas de résultats dans le store, faire un appel à l'endpoint
+        try {
+          await searchClients(searchQuery);
+          
+          // Attendre que le store soit mis à jour
+          setTimeout(() => {
+            // Filtrer les résultats pour correspondre exactement à la recherche
+            const filtered = clients.filter(c => {
+              const name = (c.name || '').toLowerCase();
+              const phone = (c.phone || '').toLowerCase();
+              return name.includes(queryLower) || phone.includes(queryLower);
+            });
+            
+            const formattedResults = filtered.map(c => ({
+              id: c.id,
+              name: c.name,
+              phone: c.phone
+            }));
+            
+            setSearchResults(formattedResults);
+            
+            // Si un seul résultat après l'appel API, l'initialiser automatiquement
+            if (formattedResults.length === 1 && !selectedClientId) {
+              initializeSingleClient(formattedResults[0]);
+            }
+          }, 50);
+        } catch {
+          setSearchResults([]);
+        }
       }
     }, 300);
     return () => clearTimeout(id);
-  }, [clientName, selectedClientId, isReadOnly, searchClients]);
+  }, [clientName, selectedClientId, isReadOnly, searchClients, clients, lastSearchQuery, initializeSingleClient]);
 
   // Lorsque l’utilisateur sélectionne un client dans la liste
   const handleClientSelect = async (client: { id: string; name: string }) => {
@@ -163,7 +279,7 @@ const OpticsInvoiceEditor: React.FC<OpticsInvoiceEditorProps> = ({
           onInvoiceDateChange={setInvoiceDate}
           onClientNameChange={setClientName}
           isReadOnly={isReadOnly}
-          clientSuggestions={!isReadOnly && !selectedClientId ? clients : []}
+          clientSuggestions={!isReadOnly && !selectedClientId && searchResults.length > 1 ? searchResults : []}
           onClientSelect={handleClientSelect}
         />
 
