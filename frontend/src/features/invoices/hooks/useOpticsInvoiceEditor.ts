@@ -127,6 +127,7 @@ export function useOpticsInvoiceEditor({
   const [selectedClientId, setSelectedClientId] = useState<string | null>(invoice?.client?.id || null);
 
   // Appliquer les données de préremplissage quand elles deviennent disponibles (uniquement en création)
+  // Utiliser uniquement `invoice` comme dépendance pour éviter les boucles infinies
   useEffect(() => {
     if (!invoice && initialFrameData) {
       setFrameData(prev => ({
@@ -138,7 +139,8 @@ export function useOpticsInvoiceEditor({
         ...(initialFrameData.price !== undefined && { price: initialFrameData.price }),
       }));
     }
-  }, [invoice, initialFrameData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice]);
 
   useEffect(() => {
     if (!invoice && initialLensData) {
@@ -170,7 +172,8 @@ export function useOpticsInvoiceEditor({
         ...(initialLensData.leftEyePrice !== undefined && { leftEyePrice: initialLensData.leftEyePrice }),
       }));
     }
-  }, [invoice, initialLensData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice]);
 
   const handleFrameChange = useCallback((field: keyof FrameData, value: string | number) => {
     setFrameData(prev => ({ ...prev, [field]: value }));
