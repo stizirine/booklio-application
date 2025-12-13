@@ -25,6 +25,7 @@
     "invoice:recalc": "tsx scripts/invoice-recalc-status.ts",
     "migrate:appt-status": "tsx scripts/migrate-appointment-status.ts",
     "migrate:appt-notes": "tsx scripts/migrate-appointment-notes.ts",
+    "migrate:invoice-items": "tsx scripts/migrate-invoice-items.ts",
     "invoice:test-data": "tsx scripts/invoice-test-data.ts",
     "invoice:schema": "tsx scripts/invoice-table-schema.ts",
     "agent:seed:templates": "tsx --tsconfig tsconfig.scripts.json scripts/seed-agent-templates.ts",

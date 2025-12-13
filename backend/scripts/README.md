@@ -200,9 +200,54 @@ Le script est déjà configuré dans `backend/package.json` :
 }
 ```
 
+## migrate-invoice-items.ts
+
+Script de migration pour ajouter le champ `items` aux factures existantes dans la base de données.
+
+### Usage
+
+```bash
+# Avec variable d'environnement
+MONGO_URI="mongodb://..." npm run migrate:invoice-items
+
+# Ou directement
+tsx scripts/migrate-invoice-items.ts
+```
+
+### Description
+
+Ce script :
+- Trouve toutes les factures qui n'ont pas le champ `items`
+- Ajoute le champ `items` avec un tableau vide `[]` par défaut
+- Affiche un rapport de migration
+
+### Exemple de sortie
+
+```
+🔌 Connexion à MongoDB...
+✅ Connecté à MongoDB
+
+🔍 Recherche des factures sans champ items...
+📊 Trouvé 15 facture(s) sans champ items
+
+🔄 Ajout du champ items aux factures...
+✅ 15 facture(s) mise(s) à jour
+
+✅ Migration terminée avec succès !
+✅ Déconnexion de MongoDB
+```
+
+### Notes importantes
+
+- **Idempotent** : Le script peut être exécuté plusieurs fois sans risque
+- **Sécurisé** : Ne modifie que les factures qui n'ont pas déjà le champ `items`
+- **Non destructif** : Les factures existantes avec des données ne sont pas affectées
+
 ## Autres scripts
 
 - `seed-tenant-and-prescription.ts` : Seed de test avec tenant et prescription optique
 - `seed-tenant-db.ts` : Seed complet de la base de données
 - `update-test-user-tenant.ts` : Mise à jour du tenant d'un utilisateur de test
+- `migrate-appointment-status.ts` : Migration du statut des rendez-vous
+- `migrate-appointment-notes.ts` : Migration des notes des rendez-vous
 

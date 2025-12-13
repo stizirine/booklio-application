@@ -82,6 +82,49 @@ const prescriptionSnapshotSchema = z.object({
   issuedAt: z.string().datetime().optional(),
 }).optional();
 
+// Schéma pour les items de facture
+const invoiceItemSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  quantity: z.number().min(0).default(1),
+  unitPrice: z.number().min(0).default(0),
+  category: z.enum(['frame', 'lens', 'service']).optional(),
+  taxRate: z.number().min(0).max(1).optional(),
+  discountAmount: z.number().min(0).optional(),
+  frameData: z.object({
+    brand: z.string().optional(),
+    model: z.string().optional(),
+    material: z.string().optional(),
+    color: z.string().optional(),
+  }).optional(),
+  lensData: z.object({
+    material: z.string().optional(),
+    index: z.string().optional(),
+    treatment: z.string().optional(),
+    brand: z.string().optional(),
+    rightEye: z.object({
+      sphere: z.string().optional(),
+      cylinder: z.string().optional(),
+      axis: z.string().optional(),
+      add: z.string().optional(),
+    }).optional(),
+    leftEye: z.object({
+      sphere: z.string().optional(),
+      cylinder: z.string().optional(),
+      axis: z.string().optional(),
+      add: z.string().optional(),
+    }).optional(),
+    pd: z.union([z.number(), z.object({
+      mono: z.object({
+        od: z.number(),
+        og: z.number(),
+      }),
+      near: z.number().optional(),
+    })]).optional(),
+  }).optional(),
+});
+
 const createSchema = z.object({
   clientId: z.string().min(1).refine(
     (val) => {
@@ -101,6 +144,7 @@ const createSchema = z.object({
   payments: z.array(paymentEntrySchema).optional(), // Tableau de paiements
   prescriptionId: z.string().optional(), // ID de la prescription optique
   prescriptionSnapshot: prescriptionSnapshotSchema, // Snapshot de prescription
+  items: z.array(invoiceItemSchema).optional(), // Items de la facture
 });
 
 const updateSchema = z.object({
@@ -110,6 +154,7 @@ const updateSchema = z.object({
   creditAmount: z.number().min(0).optional(),
   currency: SupportedCurrencySchema.optional(),
   notes: notesSchema,
+  items: z.array(invoiceItemSchema).optional(), // Items de la facture
 });
 
 router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
@@ -222,6 +267,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
       currency: created.currency,
       status: created.status,
       notes: created.notes,
+      items: created.items || [],
       payments: created.payments || [],
       createdAt: created.createdAt,
       updatedAt: created.updatedAt,
@@ -292,6 +338,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
       currency: inv.currency,
       status: inv.status,
       notes: inv.notes,
+      items: inv.items || [],
       payments: inv.payments || [],
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
@@ -383,6 +430,7 @@ router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response)
       currency: inv.currency,
       status: inv.status,
       notes: inv.notes,
+      items: inv.items || [],
       payments: inv.payments || [],
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
@@ -467,6 +515,8 @@ router.patch('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respons
       currency: updated.currency,
       status: updated.status,
       notes: updated.notes,
+      items: updated.items || [],
+      payments: updated.payments || [],
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
       deletedAt: updated.deletedAt,
@@ -660,6 +710,7 @@ router.post('/:id/payments', requireAuth, async (req: AuthenticatedRequest, res:
       currency: invoice.currency,
       status: invoice.status,
       notes: invoice.notes,
+      items: invoice.items || [],
       payments: invoice.payments,
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
@@ -764,6 +815,7 @@ router.delete(
         currency: invoice.currency,
         status: invoice.status,
         notes: invoice.notes,
+        items: invoice.items || [],
         payments: invoice.payments,
         createdAt: invoice.createdAt,
         updatedAt: invoice.updatedAt,

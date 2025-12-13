@@ -268,6 +268,77 @@ const invoiceSchema = new Schema(
       ),
       required: false,
     },
+    // Items de la facture (lignes de facturation)
+    items: {
+      type: [
+        new Schema(
+          {
+            id: { type: String, required: false },
+            name: { type: String, required: false },
+            description: { type: String, required: false },
+            quantity: { type: Number, required: false, default: 1 },
+            unitPrice: { type: Number, required: false, default: 0 },
+            category: { type: String, enum: ['frame', 'lens', 'service'], required: false },
+            taxRate: { type: Number, required: false, default: 0 },
+            discountAmount: { type: Number, required: false, default: 0 },
+            // Données spécifiques à la monture
+            frameData: {
+              type: new Schema(
+                {
+                  brand: { type: String },
+                  model: { type: String },
+                  material: { type: String },
+                  color: { type: String },
+                },
+                { _id: false }
+              ),
+              required: false,
+            },
+            // Données spécifiques aux verres
+            lensData: {
+              type: new Schema(
+                {
+                  material: { type: String },
+                  index: { type: String },
+                  treatment: { type: String },
+                  brand: { type: String },
+                  rightEye: {
+                    type: new Schema(
+                      {
+                        sphere: { type: String },
+                        cylinder: { type: String },
+                        axis: { type: String },
+                        add: { type: String },
+                      },
+                      { _id: false }
+                    ),
+                    required: false,
+                  },
+                  leftEye: {
+                    type: new Schema(
+                      {
+                        sphere: { type: String },
+                        cylinder: { type: String },
+                        axis: { type: String },
+                        add: { type: String },
+                      },
+                      { _id: false }
+                    ),
+                    required: false,
+                  },
+                  pd: { type: Schema.Types.Mixed },
+                },
+                { _id: false }
+              ),
+              required: false,
+            },
+          },
+          { _id: false }
+        ),
+      ],
+      required: false,
+      default: [],
+    },
     // Historique des paiements
     payments: {
       type: [
