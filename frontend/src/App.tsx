@@ -9,14 +9,16 @@ type AuthState = 'login' | 'register' | 'dashboard';
 
 // Composant interne pour utiliser le contexte Auth
 function AppContent() {
-  const { user, refreshUser } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const [authState, setAuthState] = useState<AuthState>('login');
 
-  const handleLogin = (authData: AuthResponse) => {
+  const handleLogin = async (authData: AuthResponse) => {
+    // Persiste les tokens puis recharge l'utilisateur avant de basculer sur le dashboard
     localStorage.setItem('accessToken', authData.tokens.accessToken);
     localStorage.setItem('refreshToken', authData.tokens.refreshToken);
-    refreshUser();
+    await refreshUser();
     setAuthState('dashboard');
+    window.dispatchEvent(new Event('authChanged'));
   };
 
   const handleRegister = (authData: AuthResponse) => {
@@ -35,19 +37,20 @@ function AppContent() {
 
   // Passer à dashboard si user est chargé
   useEffect(() => {
-    if (user && authState === 'login') {
+    if (loading) return;
+    if (user && authState !== 'dashboard') {
       setAuthState('dashboard');
-    } else if (!user && authState === 'dashboard') {
+    } else if (!user && authState !== 'login') {
       setAuthState('login');
     }
-  }, [user, authState]);
+  }, [user, loading, authState]);
 
   // removed unused local switch helpers; inline handlers are used below
 
   return (
     <div className="App">
-      {/* Sélecteur de langue global */}
-      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 hidden md:block">
+      {/* Sélecteur de langue global - visible uniquement en desktop */}
+      <div className="hidden md:block fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
         <LanguageSwitcher />
       </div>
 

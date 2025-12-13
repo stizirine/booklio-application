@@ -14,7 +14,7 @@ import mongoose from 'mongoose';
 import { OpticalPrescription } from '../dist/modules/optician/prescriptions.model.js';
 import { TenantModel } from '../dist/modules/tenants/model.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/booklio';
+const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/booklio';
 
 async function seedTenantAndPrescription() {
   console.log('🌱 Seed de la base de données...\n');

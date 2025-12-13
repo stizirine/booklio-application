@@ -30,9 +30,6 @@ const SecretsSchema = z.object({
   // API Key Header (par environnement)
   REQUIRED_HEADER_NAME: z.string().default('x-api-key'),
   REQUIRED_HEADER_VALUE: z.string().optional(),
-  REQUIRED_HEADER_VALUE_DEV: z.string().optional(),
-  REQUIRED_HEADER_VALUE_STAGING: z.string().optional(),
-  REQUIRED_HEADER_VALUE_PROD: z.string().optional(),
 });
 
 export type Secrets = z.infer<typeof SecretsSchema>;
@@ -40,6 +37,7 @@ export type Secrets = z.infer<typeof SecretsSchema>;
 let cached: Secrets | undefined;
 
 export function getSecrets(): Secrets {
+  console.log('getSecrets', cached);
   if (cached) return cached;
   const parsed = SecretsSchema.safeParse(process.env);
   if (!parsed.success) {
@@ -47,5 +45,6 @@ export function getSecrets(): Secrets {
     throw new Error(`Secrets invalides: ${details}`);
   }
   cached = parsed.data;
+  console.log('cached', cached);
   return cached;
 }

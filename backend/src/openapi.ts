@@ -4533,6 +4533,12 @@ export const openapiSpec: OpenAPIV3.Document = {
         scheme: 'bearer',
         bearerFormat: 'JWT',
       },
+      apiKeyAuth: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-api-key',
+        description: 'API Key requis en production (optionnel en développement)',
+      },
     },
     schemas: {
       Prism: {

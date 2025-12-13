@@ -80,7 +80,25 @@ function withDefaultTags(spec: OpenAPIV3.Document): OpenAPIV3.Document {
 }
 
 const openapiWithTags = withDefaultTags(openapiSpec);
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiWithTags, { explorer: true }));
+
+// Configuration Swagger avec injection automatique du header x-api-key
+const secrets = getSecrets();
+const apiKeyValue = secrets.REQUIRED_HEADER_VALUE;
+const swaggerOptions = {
+  explorer: true,
+  swaggerOptions: {
+    persistAuthorization: true,
+    // Pre-remplir automatiquement l'API Key si définie
+    ...(apiKeyValue && {
+      onComplete: function() {
+        // @ts-expect-error - Access to window.ui from Swagger UI
+        window.ui.preauthorizeApiKey('apiKeyAuth', apiKeyValue);
+      }
+    })
+  }
+};
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiWithTags, swaggerOptions));
 app.get('/docs.json', (_req, res) => res.json(openapiWithTags));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
