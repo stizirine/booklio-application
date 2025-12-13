@@ -44,7 +44,7 @@ export function useOpticsInvoicePrefill({
   selectedClientId,
   autoLoad = true,
 }: UseOpticsInvoicePrefillProps) {
-  const { clients, selectedClient } = useClientServices();
+  const { selectedClient } = useClientServices();
   const opticsStore = useOpticsStore();
   const [prefill, setPrefill] = useState<OpticsInvoicePrefill | null>(null);
 
@@ -74,8 +74,8 @@ export function useOpticsInvoicePrefill({
         );
         const latest = sorted[0];
         
-        // Trouver le client dans la liste
-        const client = clients.find(c => c.id === selectedClientId) || selectedClient || null;
+        // Utiliser uniquement selectedClient du store (pas clients array)
+        const client = selectedClient?.id === selectedClientId ? selectedClient : null;
 
         if (cancelled) return;
 
@@ -134,8 +134,9 @@ export function useOpticsInvoicePrefill({
     return () => {
       cancelled = true;
     };
+    // Ne dépendre que de selectedClientId, autoLoad et selectedClient.id pour éviter les boucles
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClientId, autoLoad]);
+  }, [selectedClientId, autoLoad, selectedClient?.id]);
 
   const resetPrefill = useCallback(() => {
     setPrefill(null);
