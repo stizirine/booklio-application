@@ -243,6 +243,33 @@ Ce script :
 - **Sécurisé** : Ne modifie que les factures qui n'ont pas déjà le champ `items`
 - **Non destructif** : Les factures existantes avec des données ne sont pas affectées
 
+## update-invoice-items.ts
+
+Script pour mettre à jour les items d'une facture spécifique dans la base de données.
+
+### Usage
+
+```bash
+# Avec mot de passe MongoDB
+MONGO_PASSWORD="..." tsx scripts/update-invoice-items.ts <invoiceId>
+
+# Ou avec URI complète
+MONGO_URI="mongodb://..." tsx scripts/update-invoice-items.ts <invoiceId>
+```
+
+### Description
+
+Ce script :
+- Trouve une facture par son ID
+- Met à jour le champ `items` avec les données fournies dans le script
+- Affiche un rapport de mise à jour
+
+### Notes importantes
+
+- **Modification directe** : Modifie directement la base de données MongoDB
+- **Personnalisable** : Les items sont définis dans le script (modifier le tableau `items`)
+- **Encodage automatique** : Le mot de passe est automatiquement encodé pour l'URI MongoDB
+
 ## Autres scripts
 
 - `seed-tenant-and-prescription.ts` : Seed de test avec tenant et prescription optique
