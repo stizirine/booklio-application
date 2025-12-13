@@ -4,12 +4,14 @@ Ce dossier contient des scripts utilitaires pour la gestion de l'application Boo
 
 ## create-account.ts
 
-Script pour créer un compte utilisateur avec configuration complète du tenant.
+Script pour créer un compte utilisateur avec configuration complète du tenant **via l'API**.
+
+> ⚠️ **Important**: Ce script utilise l'API de registration (`/v1/auth/register`). L'API doit être accessible et en cours d'exécution.
 
 ### Prérequis
 
-- MongoDB accessible
-- Variables d'environnement configurées (`.env.dev`, `.env.prod`, etc.)
+- API Booklio accessible (par défaut: `http://localhost:4000`)
+- API Key configurée si nécessaire (en production)
 
 ### Usage de base
 
@@ -38,20 +40,13 @@ npm run script:create-account -- \
 - `-e, --email <email>` : Email de l'utilisateur
 - `-p, --password <password>` : Mot de passe
 
-#### Options du tenant
+#### Options de configuration
 - `-c, --client-type <type>` : Type de client
   - `optician` (défaut) : Opticien avec capacités optiques
   - `generic` : Client générique
 
-- `--capabilities <capabilities...>` : Liste des capacités
-  - Valeurs possibles : `dashboard`, `clients`, `appointments`, `invoices`, `optics`
-  - Défaut pour optician : `dashboard clients appointments invoices optics`
-  - Exemple : `--capabilities dashboard clients optics`
-
-- `--feature-flags <flags...>` : Feature flags à activer
-  - Valeurs possibles : `optics-measurements`, `optics-prescriptions`, `optics-print`
-  - Pour optician, activés par défaut si non spécifiés
-  - Exemple : `--feature-flags optics-measurements optics-prescriptions`
+- `--api-url <url>` : URL de l'API (défaut: `http://localhost:4000`)
+- `--api-key <key>` : API Key pour l'authentification (utilise `REQUIRED_HEADER_VALUE` par défaut)
 
 #### Options utilisateur
 - `--first-name <firstName>` : Prénom
@@ -59,6 +54,7 @@ npm run script:create-account -- \
 - `--phone <phone>` : Numéro de téléphone
 - `--store-name <storeName>` : Nom du magasin
 - `--store-address <storeAddress>` : Adresse du magasin
+- `--phone-number <phoneNumber>` : Numéro de téléphone du magasin
 - `--patente <patenteNumber>` : Numéro de patente
 - `--rc <rcNumber>` : Numéro RC
 - `--npe <npeNumber>` : Numéro NPE
@@ -81,7 +77,8 @@ npm run script:create-account -- \
   --store-address "Bd Mohammed V, Casablanca" \
   --patente "12345678" \
   --rc "987654" \
-  --ice "001234567890123"
+  --ice "001234567890123" \
+  --api-key dev-key-12345
 ```
 
 #### 2. Compte générique simple
@@ -91,36 +88,32 @@ npm run script:create-account -- \
   --tenant-id cabinet-dentiste \
   --email contact@dentiste.fr \
   --password DentistePass123 \
-  --client-type generic \
-  --capabilities dashboard clients appointments
+  --client-type generic
 ```
 
-#### 3. Opticien avec feature flags personnalisés
+#### 3. Utilisation avec une API distante
 
 ```bash
 npm run script:create-account -- \
-  --tenant-id optique-moderne \
-  --email admin@optique-moderne.fr \
-  --password Moderne2024! \
-  --feature-flags optics-measurements optics-print
-```
-
-#### 4. Utilisation avec un fichier .env spécifique
-
-```bash
-# Avec .env.dev (développement)
-cd backend
-MONGO_URI="mongodb://booklio:P%40ssw0rd123@localhost:27017/booklio?authSource=admin" \
-npx tsx scripts/create-account.ts \
-  --tenant-id test-dev \
-  --email test@dev.local \
-  --password TestDev123
-
-# Avec .env.prod (production)
-ENV_FILE=.env.prod npm run script:create-account -- \
   --tenant-id prod-tenant \
   --email admin@prod.com \
-  --password ProdPass456!
+  --password ProdPass456! \
+  --api-url https://api.mondomaine.com \
+  --api-key prod-api-key-xyz
+```
+
+#### 4. Utilisation avec Docker (API locale)
+
+```bash
+# S'assurer que l'API est lancée
+docker ps | grep booklio-api
+
+# Créer le compte
+npm run script:create-account -- \
+  --tenant-id docker-test \
+  --email test@docker.local \
+  --password DockerTest123 \
+  --api-key dev-key-12345
 ```
 
 ### Sortie du script
@@ -128,14 +121,12 @@ ENV_FILE=.env.prod npm run script:create-account -- \
 Le script affiche un résumé complet après la création :
 
 ```
-🔌 Connexion à MongoDB...
-✅ Connecté à MongoDB
+🚀 Création du compte via l'API...
 
-➕ Création du tenant optique-vision...
-✅ Tenant créé
+📡 Appel à http://localhost:4000/v1/auth/register...
+✅ Compte créé avec succès!
 
-👤 Création de l'utilisateur contact@optique-vision.ma...
-✅ Utilisateur créé
+📡 Récupération des informations du tenant...
 
 📋 Résumé de la création:
 ──────────────────────────────────────────────────
@@ -149,34 +140,57 @@ User ID:          507f1f77bcf86cd799439011
 Roles:            admin
 Nom:              Ahmed Bennani
 Magasin:          Optique Vision
+Adresse:          Bd Mohammed V, Casablanca
 ──────────────────────────────────────────────────
 
-✨ Compte créé avec succès!
-
-🔌 Déconnecté de MongoDB
+✨ Le tenant est maintenant disponible dans l'API!
+💡 Vous pouvez vous connecter avec ces identifiants.
 ```
+
+### Avantages de cette approche
+
+✅ **Pas besoin d'accès direct à MongoDB** - Utilise l'API REST
+✅ **Tenant disponible immédiatement** - Le registry est mis à jour automatiquement
+✅ **Validation complète** - Toutes les règles métier de l'API sont appliquées
+✅ **Sécurisé** - Utilise les mêmes endpoints que l'application frontend
+✅ **Compatible production** - Peut être utilisé avec une API distante
 
 ### Gestion des erreurs
 
 Le script vérifie :
-- ✅ La connexion à MongoDB
-- ✅ L'existence d'un utilisateur avec le même email/tenant
-- ✅ La validité des capabilities et feature flags
-- ✅ Les champs requis
+- ✅ L'accessibilité de l'API
+- ✅ La validité de l'API Key
+- ✅ L'existence d'un utilisateur avec le même email
+- ✅ La validité du clientType et des champs
 
-En cas d'erreur, un message explicite est affiché.
+En cas d'erreur, un message explicite est affiché avec les détails de l'erreur API.
 
 ### Notes importantes
 
-1. **Tenant existant** : Si le tenant existe déjà, ses paramètres seront mis à jour
-2. **Utilisateur existant** : Le script échoue si un utilisateur avec le même email existe pour ce tenant
+1. **API doit être lancée** : Le script nécessite que l'API soit accessible
+2. **Tenant créé automatiquement** : Le tenant est créé avec les bonnes capabilities selon le `clientType`
 3. **ClientType Optician** : Ajoute automatiquement la capability `optics` et les feature flags optiques
-4. **Mot de passe** : Hashé avec bcrypt avant stockage
+4. **Mot de passe** : Validé et hashé par l'API
 5. **Rôle admin** : Tous les utilisateurs créés ont le rôle `admin` par défaut
+6. **Registry à jour** : Le tenant est immédiatement disponible dans l'API (pas besoin de redémarrer)
+
+### Configuration de l'environnement
+
+Le script utilise la variable d'environnement `REQUIRED_HEADER_VALUE` pour l'API key si `--api-key` n'est pas spécifié.
+
+Pour définir cette variable :
+
+```bash
+# Dans .env.dev
+REQUIRED_HEADER_VALUE=dev-key-12345
+
+# Dans .env.prod
+REQUIRED_HEADER_VALUE=prod-secure-key-xyz
+```
 
 ### Ajout au package.json
 
-Ajoutez ce script dans `backend/package.json` :
+Le script est déjà configuré dans `backend/package.json` :
 
 ```json
 {
