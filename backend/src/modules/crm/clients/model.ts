@@ -24,7 +24,6 @@ clientSchema.index(
   { tenantId: 1, email: 1 },
   {
     unique: true,
-    sparse: true,
     partialFilterExpression: { email: { $type: 'string' } },
   }
 );
@@ -32,7 +31,6 @@ clientSchema.index(
   { tenantId: 1, phone: 1 },
   {
     unique: true,
-    sparse: true,
     partialFilterExpression: { phone: { $type: 'string' } },
   }
 );

@@ -3,25 +3,8 @@ import { mockApi } from './mockApi';
 
 // Fonction utilitaire pour récupérer les variables d'environnement
 const getEnvConfig = () => {
-  // Utiliser REACT_APP_ENV si défini, sinon NODE_ENV
-  // REACT_APP_ENV peut être 'development', 'staging', ou 'production'
-  const appEnv = process.env.REACT_APP_ENV || process.env.NODE_ENV || 'development';
-  
-  // Récupérer la valeur du header selon l'environnement
-  const getHeaderValue = (): string | undefined => {
-    // Priorité: valeur spécifique à l'environnement, puis valeur globale
-    if (appEnv === 'production' && process.env.REACT_APP_REQUIRED_HEADER_VALUE_PROD) {
-      return process.env.REACT_APP_REQUIRED_HEADER_VALUE_PROD;
-    }
-    if (appEnv === 'staging' && process.env.REACT_APP_REQUIRED_HEADER_VALUE_STAGING) {
-      return process.env.REACT_APP_REQUIRED_HEADER_VALUE_STAGING;
-    }
-    if (appEnv === 'development' && process.env.REACT_APP_REQUIRED_HEADER_VALUE_DEV) {
-      return process.env.REACT_APP_REQUIRED_HEADER_VALUE_DEV;
-    }
-    // Valeur globale (si définie)
-    return process.env.REACT_APP_REQUIRED_HEADER_VALUE;
-  };
+  // Valeur partagée (injectée via REACT_APP_* au build)
+  const getHeaderValue = (): string | undefined => process.env.REQUIRED_HEADER_VALUE;
   
   const config = {
     // Configuration de l'API
@@ -47,7 +30,7 @@ const getEnvConfig = () => {
     DEBUG_MODE: process.env.REACT_APP_DEBUG_MODE === 'true' || process.env.NODE_ENV === 'development',
     
     // Configuration des headers API
-    X_API_KEY_HEADER_NAME: process.env.REACT_APP_X_API_KEY || 'x-api-key',
+    REQUIRED_HEADER_NAME: process.env.REACT_APP_X_API_KEY || 'x-api-key',
     REQUIRED_HEADER_VALUE: getHeaderValue()
   };
   
@@ -76,10 +59,7 @@ if (envConfig.DEBUG_MODE) {
       REACT_APP_REQUEST_TIMEOUT: process.env.REACT_APP_REQUEST_TIMEOUT,
       REACT_APP_DEBUG_MODE: process.env.REACT_APP_DEBUG_MODE,
       REACT_APP_X_API_KEY: process.env.REACT_APP_X_API_KEY,
-      REACT_APP_REQUIRED_HEADER_VALUE_DEV: process.env.REACT_APP_REQUIRED_HEADER_VALUE_DEV,
-      REACT_APP_REQUIRED_HEADER_VALUE_STAGING: process.env.REACT_APP_REQUIRED_HEADER_VALUE_STAGING,
-      REACT_APP_REQUIRED_HEADER_VALUE_PROD: process.env.REACT_APP_REQUIRED_HEADER_VALUE_PROD,
-      REACT_APP_REQUIRED_HEADER_VALUE: process.env.REACT_APP_REQUIRED_HEADER_VALUE
+      REQUIRED_HEADER_VALUE: process.env.REQUIRED_HEADER_VALUE
     },
     'Configuration finale': envConfig
   });
@@ -265,16 +245,16 @@ api.interceptors.request.use((config) => {
 
   // Ajouter le header x-api-key si nécessaire
   // Le backend accepte n'importe quelle valeur si REQUIRED_HEADER_VALUE n'est pas défini
-  if (shouldAddApiKey && envConfig.X_API_KEY_HEADER_NAME) {
+    if (shouldAddApiKey && envConfig.REQUIRED_HEADER_NAME) {
     // Utiliser la valeur depuis envConfig qui vient du .env via getHeaderValue()
-    // envConfig.REQUIRED_HEADER_VALUE est défini par getHeaderValue() qui lit
-    // REACT_APP_REQUIRED_HEADER_VALUE_PROD depuis le .env au moment du build
-    const headerValue = envConfig.REQUIRED_HEADER_VALUE || 'default-api-key';
+      // envConfig.REQUIRED_HEADER_VALUE est défini par getHeaderValue() qui lit
+      // REQUIRED_HEADER_VALUE depuis le .env au moment du build
+    const headerValue = envConfig.REQUIRED_HEADER_VALUE || 'dev-key-12345';
     const maybeAxiosHeaders = config.headers as any;
     if (typeof maybeAxiosHeaders.set === 'function') {
-      maybeAxiosHeaders.set(envConfig.X_API_KEY_HEADER_NAME, headerValue);
+      maybeAxiosHeaders.set(envConfig.REQUIRED_HEADER_NAME, headerValue);
     } else {
-      (config.headers as any)[envConfig.X_API_KEY_HEADER_NAME] = headerValue;
+      (config.headers as any)[envConfig.REQUIRED_HEADER_NAME] = headerValue;
     }
   }
 
@@ -292,15 +272,17 @@ api.interceptors.request.use((config) => {
 
   try {
     const authHeader = (config.headers as any)?.Authorization || (config.headers as any)?.get?.('Authorization');
-    const apiKeyHeaderValue = shouldAddApiKey && envConfig.X_API_KEY_HEADER_NAME
-      ? (config.headers as any)?.[envConfig.X_API_KEY_HEADER_NAME] || (config.headers as any)?.get?.(envConfig.X_API_KEY_HEADER_NAME)
-      : null;
+    const apiKeyHeaderValue =
+      shouldAddApiKey && envConfig.REQUIRED_HEADER_NAME
+        ? (config.headers as any)?.[envConfig.REQUIRED_HEADER_NAME] ||
+          (config.headers as any)?.get?.(envConfig.REQUIRED_HEADER_NAME)
+        : null;
     
     if (envConfig.DEBUG_MODE) {
       // eslint-disable-next-line no-console
       console.log('[API] ->', (config.method || 'GET').toUpperCase(), config.url, {
         'Auth': Boolean(authHeader),
-        'API-Key': apiKeyHeaderValue ? `${envConfig.X_API_KEY_HEADER_NAME}: ${apiKeyHeaderValue.substring(0, 10)}...` : 'non défini',
+        'API-Key': apiKeyHeaderValue ? `${envConfig.REQUIRED_HEADER_NAME}: ${apiKeyHeaderValue.substring(0, 10)}...` : 'non défini',
         'Headers': Object.keys(config.headers as any || {})
       });
     }

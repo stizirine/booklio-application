@@ -6,10 +6,9 @@ services:
       args:
         # Variables d'environnement pour le build React
         - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL:-/api}
-        - REACT_APP_X_API_KEY=${REACT_APP_X_API_KEY:-x-api-key}
-        - REACT_APP_REQUIRED_HEADER_VALUE=${REACT_APP_REQUIRED_HEADER_VALUE:-}
-        - REACT_APP_REQUIRED_HEADER_VALUE_PROD=${REACT_APP_REQUIRED_HEADER_VALUE_PROD:-}
-        - NODE_ENV=${NODE_ENV}
+        - REQUIRED_HEADER_NAME=${REQUIRED_HEADER_NAME:-x-api-key}
+        - REQUIRED_HEADER_VALUE=${REQUIRED_HEADER_VALUE:-}
+        - NODE_ENV=production
     container_name: booklio-frontend
     restart: always
     volumes:
@@ -50,10 +49,11 @@ services:
       # Configuration API Key Header (optionnel)
       - REQUIRED_HEADER_NAME=${REQUIRED_HEADER_NAME:-x-api-key}
       - REQUIRED_HEADER_VALUE=${REQUIRED_HEADER_VALUE:-}
-      - REQUIRED_HEADER_VALUE_PROD=${REQUIRED_HEADER_VALUE_PROD:-}
     networks:
       - booklio-network
-    # PAS de ports exposé ici pour la sécurité
+    # Port exposé en dev pour accéder directement au backend
+    ports:
+      - "4000:4000"
 
   # --- BASE DE DONNÉES ---
   mongo:
@@ -63,6 +63,8 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=booklio
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    ports:
+      - '27017:27017'
     volumes:
       - mongo-data:/data/db
     networks:
