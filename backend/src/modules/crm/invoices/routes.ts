@@ -156,6 +156,7 @@ const updateSchema = z.object({
   currency: SupportedCurrencySchema.optional(),
   notes: notesSchema,
   items: z.array(invoiceItemSchema).optional(), // Items de la facture
+  type: z.enum(['InvoiceClient', 'Invoice']).optional(), // Type de facture
 });
 
 router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
@@ -270,6 +271,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
       notes: created.notes,
       items: created.items || [],
       payments: created.payments || [],
+      type: (created as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: created.createdAt,
       updatedAt: created.updatedAt,
       deletedAt: created.deletedAt,
@@ -346,6 +348,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
       notes: inv.notes,
       items: Array.isArray(invoiceItems) ? invoiceItems : [],
       payments: inv.payments || [],
+      type: (inv as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
       deletedAt: inv.deletedAt,
@@ -441,6 +444,7 @@ router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response)
       notes: inv.notes,
       items: Array.isArray(invoiceItems) ? invoiceItems : [],
       payments: inv.payments || [],
+      type: (inv as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
       deletedAt: inv.deletedAt,
@@ -526,6 +530,7 @@ router.patch('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respons
       notes: updated.notes,
       items: updated.items || [],
       payments: updated.payments || [],
+      type: (updated as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
       deletedAt: updated.deletedAt,
@@ -721,6 +726,7 @@ router.post('/:id/payments', requireAuth, async (req: AuthenticatedRequest, res:
       notes: invoice.notes,
       items: invoice.items || [],
       payments: invoice.payments,
+      type: (invoice as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
       deletedAt: invoice.deletedAt,

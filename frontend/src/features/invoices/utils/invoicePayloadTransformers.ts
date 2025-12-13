@@ -154,6 +154,7 @@ export function transformToUpdatePayload(
 
   return {
     clientId: finalClientId,
+    type: 'InvoiceClient' as const, // Préserver le type InvoiceClient lors de la mise à jour
     totalAmount: invoiceData.total || currentInvoice.total || 0,
     currency: 'MAD',
     notes: {

@@ -224,7 +224,9 @@ const ClientDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (client?.id) {
-      fetchInvoices({ clientId: client.id });
+      // Filtrer côté backend pour exclure les factures optiques (type InvoiceClient)
+      // On récupère uniquement les factures de type Invoice (factures générales)
+      fetchInvoices({ clientId: client.id, type: 'Invoice' });
     }
     // Ne pas inclure fetchInvoices dans les dépendances car il change à chaque render
     // eslint-disable-next-line react-hooks/exhaustive-deps

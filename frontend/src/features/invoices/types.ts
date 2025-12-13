@@ -47,6 +47,7 @@ export interface ApiInvoice {
     taxRate?: number;
     discountAmount?: number;
   }>;
+  type?: 'InvoiceClient' | 'Invoice';
   createdAt: string; // ISO
   updatedAt: string; // ISO
 }
@@ -102,6 +103,7 @@ export interface Invoice {
   balanceDue?: number;
   advanceAmount?: number;
   creditAmount?: number;
+  type?: 'InvoiceClient' | 'Invoice';
 }
 
 export interface InvoiceCreatePayload {
@@ -119,6 +121,7 @@ export interface InvoiceCreatePayload {
     reference?: string;
     notes?: string;
   }>;
+  type?: 'InvoiceClient' | 'Invoice';
 }
 
 export interface InvoiceUpdatePayload {
@@ -131,6 +134,7 @@ export interface InvoiceUpdatePayload {
     reason?: string;
     comment?: string;
   };
+  type?: 'InvoiceClient' | 'Invoice';
 }
 
 export interface PaymentCreatePayload {
@@ -217,4 +221,5 @@ export const mapApiInvoiceToInvoice = (api: ApiInvoice): Invoice => ({
   balanceDue: typeof api.remainingAmount === 'number' ? api.remainingAmount : undefined,
   advanceAmount: typeof api.advanceAmount === 'number' ? api.advanceAmount : undefined,
   creditAmount: typeof api.creditAmount === 'number' ? api.creditAmount : undefined,
+  type: api.type as 'InvoiceClient' | 'Invoice' | undefined,
 });

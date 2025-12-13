@@ -86,6 +86,7 @@ export function useInvoiceForm({ invoice, clientId, open, onSubmit }: UseInvoice
     } : undefined;
 
     // Construire le payload de base
+    // Pour les factures générales créées via InvoiceFormModal, le type est toujours 'Invoice'
     const payload: any = {
       clientId,
       totalAmount,
@@ -93,6 +94,17 @@ export function useInvoiceForm({ invoice, clientId, open, onSubmit }: UseInvoice
       currency: formData.currency,
       notes: notesPayload,
     };
+    
+    // Définir le type selon le contexte :
+    // - En création : toujours 'Invoice' pour les factures générales
+    // - En mise à jour : préserver le type existant de la facture (ou 'Invoice' par défaut)
+    if (isUpdate) {
+      // Préserver le type existant lors de la mise à jour
+      payload.type = invoice?.type || 'Invoice';
+    } else {
+      // En création, toujours 'Invoice' pour les factures générales
+      payload.type = 'Invoice' as const;
+    }
 
     // Gestion de l'avance :
     // - En création: utiliser payments (accepté par le backend pour créer et recalculer advanceAmount)
