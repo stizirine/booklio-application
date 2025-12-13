@@ -189,7 +189,9 @@ const ClientDetailPage: React.FC = () => {
     if (client?.id) {
       fetchInvoices({ clientId: client.id });
     }
-  }, [client?.id, fetchInvoices]);
+    // Ne pas inclure fetchInvoices dans les dépendances car il change à chaque render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client?.id]);
 
   const handleSaveOpticsInvoice = useCallback(async (invoiceData: Partial<Invoice>) => {
     if (!client?.id) return;

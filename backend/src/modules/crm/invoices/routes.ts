@@ -31,8 +31,67 @@ const paymentEntrySchema = z.object({
   notes: z.string().optional(),
 });
 
+// Schéma pour prescriptionSnapshot (simplifié pour la validation)
+const prescriptionSnapshotSchema = z.object({
+  kind: z.enum(['glasses', 'contacts']),
+  correction: z.object({
+    od: z.object({
+      sphere: z.number().nullable().optional(),
+      cylinder: z.number().nullable().optional(),
+      axis: z.number().nullable().optional(),
+      add: z.number().nullable().optional(),
+      prism: z.object({
+        value: z.number().nullable().optional(),
+        base: z.string().nullable().optional(),
+      }).nullable().optional(),
+    }),
+    og: z.object({
+      sphere: z.number().nullable().optional(),
+      cylinder: z.number().nullable().optional(),
+      axis: z.number().nullable().optional(),
+      add: z.number().nullable().optional(),
+      prism: z.object({
+        value: z.number().nullable().optional(),
+        base: z.string().nullable().optional(),
+      }).nullable().optional(),
+    }),
+  }),
+  glassesParams: z.object({
+    lensType: z.string().optional(),
+    index: z.string().optional(),
+    treatments: z.array(z.string()).optional(),
+    pd: z.union([z.number(), z.object({
+      mono: z.object({
+        od: z.number(),
+        og: z.number(),
+      }),
+      near: z.number().optional(),
+    })]).optional(),
+    segmentHeight: z.number().optional(),
+    vertexDistance: z.number().optional(),
+    baseCurve: z.number().optional(),
+    frame: z.object({
+      type: z.string().optional(),
+      eye: z.number().optional(),
+      bridge: z.number().optional(),
+      temple: z.number().optional(),
+      material: z.string().optional(),
+    }).optional(),
+  }).optional(),
+  contactLensParams: z.any().optional(),
+  issuedAt: z.string().datetime().optional(),
+}).optional();
+
 const createSchema = z.object({
-  clientId: z.string().min(1),
+  clientId: z.string().min(1).refine(
+    (val) => {
+      // Vérifier que c'est un ObjectId MongoDB valide (24 caractères hexadécimaux)
+      return /^[0-9a-fA-F]{24}$/.test(val);
+    },
+    {
+      message: 'clientId must be a valid MongoDB ObjectId',
+    }
+  ),
   totalAmount: z.number().min(0),
   advanceAmount: z.number().min(0).default(0),
   creditAmount: z.number().min(0).default(0),
@@ -40,6 +99,8 @@ const createSchema = z.object({
   notes: notesSchema,
   payment: paymentEntrySchema.optional(), // Objet unique (rétrocompatibilité)
   payments: z.array(paymentEntrySchema).optional(), // Tableau de paiements
+  prescriptionId: z.string().optional(), // ID de la prescription optique
+  prescriptionSnapshot: prescriptionSnapshotSchema, // Snapshot de prescription
 });
 
 const updateSchema = z.object({
@@ -55,7 +116,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
   const current = req.user!;
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(handleValidationError(parsed.error));
-  const { payment, payments, advanceAmount, ...restData } = parsed.data;
+  const { payment, payments, advanceAmount, prescriptionSnapshot, ...restData } = parsed.data;
 
   // Construire le payload de base
   const invoicePayload: Record<string, unknown> = {
@@ -63,6 +124,15 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
     deletedAt: null,
     ...restData,
   };
+
+  // Ajouter prescriptionSnapshot si fourni (convertir issuedAt en Date si présent)
+  if (prescriptionSnapshot) {
+    const snapshot: Record<string, unknown> = { ...prescriptionSnapshot };
+    if (snapshot.issuedAt && typeof snapshot.issuedAt === 'string') {
+      snapshot.issuedAt = new Date(snapshot.issuedAt);
+    }
+    invoicePayload.prescriptionSnapshot = snapshot;
+  }
 
   // Gestion des paiements : priorité dans l'ordre payments > payment > advanceAmount
   if (payments && payments.length > 0) {

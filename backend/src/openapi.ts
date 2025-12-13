@@ -3742,6 +3742,49 @@ export const openapiSpec: OpenAPIV3.Document = {
                     ],
                   },
                 },
+                factureOptique: {
+                  summary: 'Facture optique avec prescription snapshot',
+                  value: {
+                    clientId: '68ca6b15203bb6ac8918c52c',
+                    totalAmount: 1200,
+                    currency: 'MAD',
+                    notes: {
+                      reason: 'Facture optique',
+                      comment: 'Monture et verres correcteurs',
+                    },
+                    prescriptionSnapshot: {
+                      kind: 'glasses',
+                      correction: {
+                        od: {
+                          sphere: -2.5,
+                          cylinder: -0.75,
+                          axis: 180,
+                          add: null,
+                          prism: null,
+                        },
+                        og: {
+                          sphere: -2.25,
+                          cylinder: -0.5,
+                          axis: 10,
+                          add: null,
+                          prism: null,
+                        },
+                      },
+                      glassesParams: {
+                        lensType: 'single_vision',
+                        index: '1.60',
+                        treatments: ['anti_reflect'],
+                        pd: {
+                          mono: {
+                            od: 32,
+                            og: 32,
+                          },
+                        },
+                      },
+                      issuedAt: '2025-01-15T10:00:00Z',
+                    },
+                  },
+                },
               },
             },
           },
@@ -5279,6 +5322,114 @@ export const openapiSpec: OpenAPIV3.Document = {
               },
               required: ['amount'],
             },
+          },
+          prescriptionId: {
+            type: 'string',
+            description: 'ID de la prescription optique associée (optionnel)',
+            example: '68ca6b15203bb6ac8918c52c',
+          },
+          prescriptionSnapshot: {
+            type: 'object',
+            description: 'Snapshot de la prescription optique au moment de la création de la facture (optionnel)',
+            properties: {
+              kind: {
+                type: 'string',
+                enum: ['glasses', 'contacts'],
+                description: 'Type de prescription',
+              },
+              correction: {
+                type: 'object',
+                properties: {
+                  od: {
+                    type: 'object',
+                    properties: {
+                      sphere: { type: 'number', nullable: true },
+                      cylinder: { type: 'number', nullable: true },
+                      axis: { type: 'number', nullable: true },
+                      add: { type: 'number', nullable: true },
+                      prism: {
+                        type: 'object',
+                        nullable: true,
+                        properties: {
+                          value: { type: 'number', nullable: true },
+                          base: { type: 'string', nullable: true },
+                        },
+                      },
+                    },
+                  },
+                  og: {
+                    type: 'object',
+                    properties: {
+                      sphere: { type: 'number', nullable: true },
+                      cylinder: { type: 'number', nullable: true },
+                      axis: { type: 'number', nullable: true },
+                      add: { type: 'number', nullable: true },
+                      prism: {
+                        type: 'object',
+                        nullable: true,
+                        properties: {
+                          value: { type: 'number', nullable: true },
+                          base: { type: 'string', nullable: true },
+                        },
+                      },
+                    },
+                  },
+                },
+                required: ['od', 'og'],
+              },
+              glassesParams: {
+                type: 'object',
+                properties: {
+                  lensType: { type: 'string' },
+                  index: { type: 'string' },
+                  treatments: { type: 'array', items: { type: 'string' } },
+                  pd: {
+                    oneOf: [
+                      { type: 'number' },
+                      {
+                        type: 'object',
+                        properties: {
+                          mono: {
+                            type: 'object',
+                            properties: {
+                              od: { type: 'number' },
+                              og: { type: 'number' },
+                            },
+                            required: ['od', 'og'],
+                          },
+                          near: { type: 'number' },
+                        },
+                        required: ['mono'],
+                      },
+                    ],
+                  },
+                  segmentHeight: { type: 'number' },
+                  vertexDistance: { type: 'number' },
+                  baseCurve: { type: 'number' },
+                  frame: {
+                    type: 'object',
+                    properties: {
+                      type: { type: 'string' },
+                      eye: { type: 'number' },
+                      bridge: { type: 'number' },
+                      temple: { type: 'number' },
+                      material: { type: 'string' },
+                    },
+                  },
+                },
+              },
+              contactLensParams: {
+                type: 'object',
+                description: 'Paramètres pour lentilles de contact',
+                additionalProperties: true,
+              },
+              issuedAt: {
+                type: 'string',
+                format: 'date-time',
+                description: 'Date d\'émission de la prescription',
+              },
+            },
+            required: ['kind', 'correction'],
           },
         },
         required: ['clientId', 'totalAmount'],

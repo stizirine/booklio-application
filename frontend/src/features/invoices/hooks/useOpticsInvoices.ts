@@ -244,7 +244,10 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
 
   // Charger automatiquement au montage
   useEffect(() => {
-    if (autoFetch && capabilities.canAccessOptics()) {
+    // Vérifier une seule fois au montage, pas à chaque render
+    const hasAccess = capabilities.canAccessOptics();
+    
+    if (autoFetch && hasAccess) {
       // Appel direct sans dépendance sur fetchInvoices
       const loadInvoices = async () => {
         setLoading(true);
@@ -266,6 +269,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
       
       loadInvoices();
     }
+    // Ne dépendre QUE de autoFetch et clientId, pas de capabilities
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFetch, clientId]);
 

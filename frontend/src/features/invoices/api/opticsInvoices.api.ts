@@ -1,5 +1,5 @@
 import api from '@services/api';
-import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload } from '../types';
+import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload, mapApiInvoiceToInvoice, ApiInvoice, InvoiceCreateResponse } from '../types';
 
 // Types spécifiques pour les factures optiques
 export interface OpticsInvoiceItem {
@@ -41,6 +41,45 @@ export interface OpticsInvoiceItem {
 export interface OpticsInvoiceCreatePayload extends Omit<InvoiceCreatePayload, 'items'> {
   items: OpticsInvoiceItem[];
   // Informations spécifiques à l'optique
+  prescriptionId?: string; // ID de la prescription optique
+  prescriptionSnapshot?: {
+    kind: 'glasses' | 'contacts';
+    correction: {
+      od: {
+        sphere?: number | null;
+        cylinder?: number | null;
+        axis?: number | null;
+        add?: number | null;
+        prism?: { value?: number | null; base?: string | null } | null;
+      };
+      og: {
+        sphere?: number | null;
+        cylinder?: number | null;
+        axis?: number | null;
+        add?: number | null;
+        prism?: { value?: number | null; base?: string | null } | null;
+      };
+    };
+    glassesParams?: {
+      lensType?: string;
+      index?: string;
+      treatments?: string[];
+      pd?: number | { mono: { od: number; og: number }; near?: number };
+      segmentHeight?: number;
+      vertexDistance?: number;
+      baseCurve?: number;
+      frame?: {
+        type?: string;
+        eye?: number;
+        bridge?: number;
+        temple?: number;
+        material?: string;
+      };
+    };
+    contactLensParams?: any;
+    issuedAt?: string;
+  };
+  // Rétrocompatibilité avec l'ancien format
   prescriptionData?: {
     rightEye: {
       sphere: number;
@@ -135,7 +174,8 @@ export const opticsInvoicesApi = {
   async createOpticsInvoice(payload: OpticsInvoiceCreatePayload): Promise<Invoice> {
     // Les factures optiques utilisent le même endpoint que les factures normales
     const response = await api.post('/v1/invoices', payload);
-    return response.data;
+    const data = response.data as InvoiceCreateResponse;
+    return mapApiInvoiceToInvoice(data.invoice);
   },
 
   /**

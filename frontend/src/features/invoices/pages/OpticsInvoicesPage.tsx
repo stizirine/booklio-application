@@ -1,5 +1,6 @@
 import VirtualizedList from '@components/VirtualizedList';
 import { Badge, Button, Card, Input } from '@components/ui';
+import { useNotification } from '@contexts/NotificationContext';
 import { useClientServices } from '@features/clients/services';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,10 +10,11 @@ import { useOpticsInvoiceClientResolution } from '../hooks/useOpticsInvoiceClien
 import { useOpticsInvoicePrefill } from '../hooks/useOpticsInvoicePrefill';
 import { useOpticsInvoices } from '../hooks/useOpticsInvoices';
 import { Invoice } from '../types';
-import { transformToUpdatePayload } from '../utils/invoicePayloadTransformers';
+import { transformToCreatePayload, transformToUpdatePayload } from '../utils/invoicePayloadTransformers';
 
 const OpticsInvoicesPage: React.FC = () => {
   const { t } = useTranslation();
+  const { showError } = useNotification();
   const [showEditor, setShowEditor] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
@@ -26,7 +28,8 @@ const OpticsInvoicesPage: React.FC = () => {
     loading,
     error,
     fetchInvoices,
-    // createInvoice,
+    fetchInvoice,
+    createInvoice,
     updateInvoice,
     generatePDF,
     canAccessOptics,
@@ -85,23 +88,45 @@ const OpticsInvoicesPage: React.FC = () => {
   const handleSaveInvoice = async (invoiceData: Partial<Invoice>) => {
     try {
       if (editingMode === 'create') {
-        // Mode création sans appel backend: construire une facture locale et afficher l'aperçu
-        const localInvoice: Invoice = {
-          id: `temp-${Date.now()}`,
-          number: invoiceData.number || getNextInvoiceNumber(),
-          client: invoiceData.client,
-          status: 'draft',
-          currency: invoiceData.currency || 'MAD',
-          issuedAt: invoiceData.issuedAt || new Date().toISOString(),
-          items: invoiceData.items || [],
-          notes: invoiceData.notes,
-          payments: [],
-          subtotal: invoiceData.subtotal,
-          total: invoiceData.total,
-        } as Invoice;
-        setCurrentInvoice(localInvoice);
+        // Mode création: sauvegarder dans la DB via l'endpoint
+        const clientId = selectedClientId || invoiceData.client?.id;
+        if (!clientId || clientId === 'temp') {
+          // Afficher une notification d'erreur à l'utilisateur
+          showError(
+            t('common.error', { defaultValue: 'Erreur' }),
+            t('invoices.clientRequired', { defaultValue: 'Veuillez sélectionner un client avant de créer la facture' })
+          );
+          return;
+        }
+        
+        const payload = transformToCreatePayload(invoiceData, clientId);
+        const createdInvoice = await createInvoice(payload);
+        
+        // Enrichir la facture créée avec les données du formulaire (items, number, etc.)
+        // car le backend ne retourne pas les items dans la réponse
+        const enrichedInvoice: Invoice = {
+          ...createdInvoice,
+          // Conserver les items du formulaire
+          items: invoiceData.items || createdInvoice.items || [],
+          // Conserver le numéro de facture si fourni
+          number: invoiceData.number || createdInvoice.number,
+          // Conserver la date d'émission si fournie
+          issuedAt: invoiceData.issuedAt || createdInvoice.issuedAt,
+          // Conserver les notes complètes
+          notes: invoiceData.notes || createdInvoice.notes,
+          // Conserver le total calculé
+          total: invoiceData.total || createdInvoice.total,
+          subtotal: invoiceData.subtotal || createdInvoice.subtotal,
+          // Conserver les infos client
+          client: invoiceData.client || createdInvoice.client,
+        };
+        
+        setCurrentInvoice(enrichedInvoice);
         setShowEditor(false);
         setShowPrint(true);
+        
+        // Rafraîchir la liste des factures
+        await fetchInvoices();
       } else if (editingMode === 'edit' && currentInvoice) {
         const payload = transformToUpdatePayload(invoiceData, currentInvoice);
         const updatedInvoice = await updateInvoice(currentInvoice.id, payload);
@@ -110,6 +135,12 @@ const OpticsInvoicesPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      // Afficher l'erreur à l'utilisateur
+      const errorMessage = error instanceof Error ? error.message : t('common.error', { defaultValue: 'Une erreur est survenue' });
+      showError(
+        t('common.error', { defaultValue: 'Erreur' }),
+        errorMessage
+      );
     }
   };
 
@@ -122,13 +153,27 @@ const OpticsInvoicesPage: React.FC = () => {
         window.open(url, '_blank');
       } else {
         // Fallback: affichage de la facture pour impression
-        setCurrentInvoice(invoice);
+        // Récupérer la facture complète depuis l'API pour avoir toutes les données
+        try {
+          const fullInvoice = await fetchInvoice(invoice.id);
+          setCurrentInvoice(fullInvoice || invoice);
+        } catch {
+          // Si la récupération échoue, utiliser la facture telle quelle
+          setCurrentInvoice(invoice);
+        }
         setShowPrint(true);
       }
     } catch (error) {
       console.error('Erreur lors de la génération du PDF:', error);
       // Fallback: affichage de la facture pour impression
-      setCurrentInvoice(invoice);
+      // Récupérer la facture complète depuis l'API pour avoir toutes les données
+      try {
+        const fullInvoice = await fetchInvoice(invoice.id);
+        setCurrentInvoice(fullInvoice || invoice);
+      } catch {
+        // Si la récupération échoue, utiliser la facture telle quelle
+        setCurrentInvoice(invoice);
+      }
       setShowPrint(true);
     }
   };

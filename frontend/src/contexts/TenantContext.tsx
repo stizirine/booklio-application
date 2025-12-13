@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { Capability, ClientType, FeatureFlag, MeResponse, Tenant } from '../common/auth/types';
 import api from '../services/api';
 
@@ -97,7 +97,7 @@ export const useTenant = (): TenantContextType => {
 export const useCapabilities = () => {
   const { tenant } = useTenant();
   
-  return {
+  return useMemo(() => ({
     hasCapability: (capability: Capability) => tenant?.capabilities.includes(capability) || false,
     hasFeatureFlag: (flag: FeatureFlag) => tenant?.featureFlags[flag] === true,
     canAccessOptics: () => tenant?.clientType === ClientType.Optician && tenant?.capabilities.includes(Capability.Optics),
@@ -106,7 +106,7 @@ export const useCapabilities = () => {
     canPrintOptics: () => tenant?.clientType === ClientType.Optician && tenant?.featureFlags[FeatureFlag.OpticsPrint] === true,
     isOptician: () => tenant?.clientType === ClientType.Optician,
     isGeneric: () => tenant?.clientType === ClientType.Generic,
-  };
+  }), [tenant]);
 };
 
 export default TenantContext;
