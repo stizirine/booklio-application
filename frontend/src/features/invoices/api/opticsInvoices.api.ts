@@ -114,8 +114,8 @@ export const opticsInvoicesApi = {
     page?: number;
     limit?: number;
   }): Promise<Invoice[]> {
-    // Utiliser l'endpoint spécifique aux factures optiques
-    const response = await api.get('/v1/optician/invoices', { 
+    // Les factures optiques utilisent le même endpoint que les factures normales
+    const response = await api.get('/v1/invoices', { 
       params
     });
     return response.data;
