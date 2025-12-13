@@ -5,7 +5,6 @@ WORKDIR /app
 # Arguments de build depuis docker-compose
 ARG REACT_APP_API_BASE_URL=/api
 ARG REQUIRED_HEADER_NAME=x-api-key
-ARG REQUIRED_HEADER_NAME=x-api-key
 ARG REQUIRED_HEADER_VALUE
 ARG NODE_ENV=production
 
@@ -29,8 +28,8 @@ RUN NODE_ENV=development npm install craco-alias@^3.0.1 --legacy-peer-deps --sav
 # Définir les variables d'environnement pour le build React
 ENV NODE_ENV=${NODE_ENV}
 ENV REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
-ENV RREQUIRED_HEADER_NAME=${REQUIRED_HEADER_NAME}
-ENV REQUIRED_HEADER_VALUE=${REQUIRED_HEADER_VALUE}
+ENV REACT_APP_REQUIRED_HEADER_NAME=${REQUIRED_HEADER_NAME}
+ENV REACT_APP_REQUIRED_HEADER_VALUE=${REQUIRED_HEADER_VALUE}
 
 # Exécuter le build React via craco (chemin garanti)
 ENV PATH="/usr/local/bin:/app/node_modules/.bin:${PATH}"

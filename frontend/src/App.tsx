@@ -40,7 +40,8 @@ function AppContent() {
     if (loading) return;
     if (user && authState !== 'dashboard') {
       setAuthState('dashboard');
-    } else if (!user && authState !== 'login') {
+    } else if (!user && authState === 'dashboard') {
+      // Ne revenir à login que si on était sur le dashboard (déconnexion)
       setAuthState('login');
     }
   }, [user, loading, authState]);
