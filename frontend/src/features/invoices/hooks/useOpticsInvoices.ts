@@ -66,7 +66,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
     } finally {
       setLoading(false);
     }
-  }, [clientId, capabilities]);
+  }, [clientId, capabilities, t]);
 
   // Charger une facture spécifique
   const fetchInvoice = useCallback(async (id: string) => {
