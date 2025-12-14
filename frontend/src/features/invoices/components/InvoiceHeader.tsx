@@ -45,7 +45,7 @@ const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
             </p>
             <div className="mt-2 sm:mt-3 text-[10px] sm:text-xs text-gray-600 space-y-0.5 sm:space-y-1">
               <p>
-                <span className="font-medium">FINESS/AM:</span> {npeNumber || '—'}
+                <span className="font-medium">{t('invoices.finessAm', { defaultValue: 'FINESS/AM' })}:</span> {npeNumber || '—'}
               </p>
               <p>
                 <span className="font-medium">{t('profile.npeNumber', { defaultValue: 'N°Siren / Siret' })}:</span> {rcNumber || '—'}

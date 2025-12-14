@@ -48,7 +48,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
               {t('auth.registerDescription')}
             </h1>
             <p className="text-[var(--color-muted)] text-sm sm:text-base">
-              Créez votre compte Booklio en quelques secondes, pensé pour mobile et desktop.
+              {t('auth.registerSubDescription', { defaultValue: 'Créez votre compte Booklio en quelques secondes, pensé pour mobile et desktop.' })}
             </p>
           </div>
 
@@ -58,7 +58,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
                 B
               </span>
               <div>
-                <p className="text-xs text-[var(--color-muted)]">Onboarding rapide</p>
+                <p className="text-xs text-[var(--color-muted)]">{t('auth.quickOnboarding', { defaultValue: 'Onboarding rapide' })}</p>
                 <p className="text-sm font-semibold text-[var(--color-fg)]">{t('app.title')}</p>
               </div>
             </div>

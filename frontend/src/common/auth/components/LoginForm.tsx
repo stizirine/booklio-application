@@ -6,11 +6,12 @@ import { AuthToggleLink, ErrorMessage, FormField, SubmitButton } from './AuthFor
 
 interface LoginFormProps {
   onLogin: (authData: AuthResponse) => void;
-  onSwitchToRegister: () => void;
+  onSwitchToRegister?: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) => {
   const { t } = useTranslation();
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.REACT_APP_ENV === 'production';
   
   const {
     formData,
@@ -43,12 +44,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) =>
         <div className="w-full max-w-md space-y-6 mx-auto">
           <div className="space-y-2 text-center sm:text-left">
             <p className="text-sm sm:text-base font-semibold uppercase tracking-wide text-[var(--color-secondary)]">{t('auth.login')}</p>
-            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-fg)] leading-tight">
-              {t('auth.welcomeBack', { name: '' })}
-            </h1>
-            <p className="text-[var(--color-muted)] text-sm sm:text-base">
-              Accédez à votre espace en toute sécurité avec une interface pensée mobile-first.
-            </p>
+
           </div>
 
           <div className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-card rounded-[var(--radius-md)] p-6 sm:p-8 space-y-6 mx-auto">
@@ -57,8 +53,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) =>
                 B
               </span>
               <div>
-                <p className="text-xs text-[var(--color-muted)]">Connexion sécurisée</p>
-                <p className="text-sm font-semibold text-[var(--color-fg)]">Booklio</p>
+                <p className="text-xs text-[var(--color-muted)]">{t('auth.secureConnection', { defaultValue: 'Connexion sécurisée' })}</p>
+                <p className="text-sm font-semibold text-[var(--color-fg)]">{t('app.title')}</p>
               </div>
             </div>
 
@@ -98,11 +94,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) =>
                 icon="arrow-right"
               />
 
-              <AuthToggleLink
-                text="Pas de compte ?"
-                linkText={t('auth.register')}
-                onClick={onSwitchToRegister}
-              />
+              {!isProduction && onSwitchToRegister && (
+                <AuthToggleLink
+                  text={t('auth.noAccount', { defaultValue: 'Pas de compte ?' })}
+                  linkText={t('auth.register')}
+                  onClick={onSwitchToRegister}
+                />
+              )}
             </form>
           </div>
         </div>

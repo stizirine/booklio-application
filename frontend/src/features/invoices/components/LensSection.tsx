@@ -129,7 +129,7 @@ const EyeCorrectionFields: React.FC<EyeCorrectionFieldsProps> = ({
             value={eyePrice === 0 ? '' : eyePrice}
             onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
             className="text-sm"
-            placeholder="525"
+            placeholder={t('invoices.pricePlaceholder', { defaultValue: '525' })}
           />
         </Field>
       </div>

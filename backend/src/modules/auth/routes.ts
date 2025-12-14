@@ -111,6 +111,14 @@ function signTokens(userId: string, tenantId: string) {
 }
 
 router.post('/register', async (req: Request, res: Response) => {
+  // Désactiver la création de compte en production
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      error: 'Registration is disabled in production',
+      message: 'La création de compte est désactivée en production'
+    });
+  }
+
   const parse = registerSchema.safeParse(req.body);
   if (!parse.success) return res.status(400).json(handleValidationError(parse.error));
   const {

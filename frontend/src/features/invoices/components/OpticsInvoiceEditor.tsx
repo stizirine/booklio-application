@@ -302,7 +302,9 @@ const OpticsInvoiceEditor: React.FC<OpticsInvoiceEditorProps> = ({
         <div className="bg-blue-50 p-4 rounded-lg mb-6">
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-gray-900">{t('invoices.total', { defaultValue: 'Total' })}</span>
-            <span className="text-2xl font-bold text-blue-600">{calculateTotal()} DH</span>
+            <span className="text-2xl font-bold text-blue-600">
+              {calculateTotal()} {t('invoices.currencySymbol', { defaultValue: 'DH' })}
+            </span>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import CreateEventModal from '@src/features/appointments/components/CreateEventM
 import { ClientItem, NewClientPayload } from '@src/types';
 import { useClientStore } from '@stores/clientStore';
 import React, { useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../../../contexts/NotificationContext';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -20,6 +21,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({
   onCreateAppointment: _onCreateAppointment,
   onCreateInvoice: _onCreateInvoice,
 }) => {
+  const { t } = useTranslation();
   const { tenant: _tenant } = useTenant();
   const { showSuccess, showError } = useNotification();
   const clientStore = useClientStore();
@@ -101,12 +103,25 @@ const ClientsPage: React.FC<ClientsPageProps> = ({
   const handleCreate = useCallback(async (payload: NewClientPayload) => {
     try {
       await clientStore.createClient(payload);
-      showSuccess('Client créé', `${payload.firstName} ${payload.lastName} a été ajouté avec succès`);
+      showSuccess(
+        t('clients.createSuccess', { defaultValue: 'Client créé' }),
+        t('clients.createSuccessMessage', { 
+          defaultValue: '{{firstName}} {{lastName}} a été ajouté avec succès',
+          firstName: payload.firstName,
+          lastName: payload.lastName
+        })
+      );
     } catch (error) {
-      showError('Erreur', `Impossible de créer le client: ${error}`);
+      showError(
+        t('common.error', { defaultValue: 'Erreur' }),
+        t('clients.createErrorMessage', { 
+          defaultValue: 'Impossible de créer le client: {{error}}',
+          error: String(error)
+        })
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showSuccess, showError]);
+  }, [showSuccess, showError, t]);
 
   const handleSelect = useCallback((client: ClientItem) => {
     // Naviguer vers la page de détails du client

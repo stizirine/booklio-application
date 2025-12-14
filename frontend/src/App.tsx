@@ -10,6 +10,7 @@ type AuthState = 'login' | 'register' | 'dashboard';
 // Composant interne pour utiliser le contexte Auth
 function AppContent() {
   const { user, loading, refreshUser } = useAuth();
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.REACT_APP_ENV === 'production';
   const [authState, setAuthState] = useState<AuthState>('login');
 
   const handleLogin = async (authData: AuthResponse) => {
@@ -56,9 +57,12 @@ function AppContent() {
       </div>
 
       {authState === 'login' && (
-        <LoginForm onLogin={handleLogin} onSwitchToRegister={() => setAuthState('register')} />
+        <LoginForm 
+          onLogin={handleLogin} 
+          onSwitchToRegister={isProduction ? undefined : () => setAuthState('register')} 
+        />
       )}
-      {authState === 'register' && (
+      {authState === 'register' && !isProduction && (
         <RegisterForm onRegister={handleRegister} onSwitchToLogin={() => setAuthState('login')} />
       )}
       {authState === 'dashboard' && user && (

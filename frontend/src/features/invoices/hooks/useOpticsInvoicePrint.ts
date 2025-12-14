@@ -1,5 +1,6 @@
 import { useProfile } from '@common/auth/hooks/useProfile';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Invoice } from '../types';
 
 export interface UseOpticsInvoicePrintProps {
@@ -38,6 +39,7 @@ export interface UseOpticsInvoicePrintReturn {
 
 export function useOpticsInvoicePrint({ invoice: _invoice }: UseOpticsInvoicePrintProps): UseOpticsInvoicePrintReturn {
   const { user } = useProfile();
+  const { t } = useTranslation();
 
   const formatDate = useCallback((dateString?: string) => {
     if (!dateString) return '';
@@ -45,8 +47,8 @@ export function useOpticsInvoicePrint({ invoice: _invoice }: UseOpticsInvoicePri
   }, []);
 
   const formatCurrency = useCallback((amount: number) => {
-    return `${amount.toFixed(0)} DH`;
-  }, []);
+    return `${amount.toFixed(0)} ${t('invoices.currencySymbol', { defaultValue: 'DH' })}`;
+  }, [t]);
 
   const invoiceHeader = {
     storeName: user?.storeName || 'ICHBILIA OPTIQUE',
