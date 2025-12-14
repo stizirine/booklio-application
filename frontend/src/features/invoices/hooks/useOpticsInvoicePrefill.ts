@@ -1,6 +1,6 @@
 import { useClientServices } from '@features/clients/services';
 import { useOpticsStore } from '@features/optics/store/opticsStore';
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface OpticsInvoicePrefill {
   frame?: {
@@ -44,9 +44,23 @@ export function useOpticsInvoicePrefill({
   selectedClientId,
   autoLoad = true,
 }: UseOpticsInvoicePrefillProps) {
-  const { clients, selectedClient } = useClientServices();
+  const { selectedClient } = useClientServices();
   const opticsStore = useOpticsStore();
   const [prefill, setPrefill] = useState<OpticsInvoicePrefill | null>(null);
+  
+  // Stabiliser selectedClient et opticsStore avec useRef pour éviter les boucles
+  const selectedClientRef = useRef(selectedClient);
+  const opticsStoreRef = useRef(opticsStore);
+  
+  useEffect(() => {
+    selectedClientRef.current = selectedClient;
+    opticsStoreRef.current = opticsStore;
+    // Seulement dépendre des valeurs primitives pour éviter les boucles
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClient?.id, selectedClient?.name]);
+
+  // Utiliser une ref pour éviter les appels multiples simultanés
+  const isLoadingRef = useRef(false);
 
   useEffect(() => {
     if (!autoLoad || !selectedClientId) {
@@ -61,10 +75,16 @@ export function useOpticsInvoicePrefill({
 
     let cancelled = false;
     
+    // Éviter les appels multiples simultanés
+    if (isLoadingRef.current) {
+      return;
+    }
+    isLoadingRef.current = true;
+    
     const loadPrefill = async () => {
       try {
         // Charger les prescriptions optiques pour ce client
-        const recs = await opticsStore.fetchByClient(selectedClientId);
+        const recs = await opticsStoreRef.current.fetchByClient(selectedClientId);
         
         if (cancelled) return;
         
@@ -74,8 +94,10 @@ export function useOpticsInvoicePrefill({
         );
         const latest = sorted[0];
         
-        // Trouver le client dans la liste
-        const client = clients.find(c => c.id === selectedClientId) || selectedClient || null;
+        // Utiliser uniquement selectedClient du store (pas clients array)
+        // Utiliser la ref pour éviter les boucles
+        const currentSelectedClient = selectedClientRef.current;
+        const client = currentSelectedClient?.id === selectedClientId ? currentSelectedClient : null;
 
         if (cancelled) return;
 
@@ -126,6 +148,8 @@ export function useOpticsInvoicePrefill({
           console.error('Erreur lors du chargement du préremplissage:', error);
           setPrefill(null);
         }
+      } finally {
+        isLoadingRef.current = false;
       }
     };
 
@@ -133,9 +157,85 @@ export function useOpticsInvoicePrefill({
     
     return () => {
       cancelled = true;
+      isLoadingRef.current = false;
     };
+    // Ne dépendre que de selectedClientId et autoLoad pour éviter les boucles
+    // selectedClient?.id change trop souvent et cause des boucles infinies
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClientId, autoLoad]);
+
+  const loadPrefill = useCallback(async () => {
+    if (!selectedClientId) {
+      setPrefill(null);
+      return;
+    }
+
+    // Éviter les appels multiples simultanés
+    if (isLoadingRef.current) {
+      return;
+    }
+    isLoadingRef.current = true;
+
+    try {
+      const recs = await opticsStoreRef.current.fetchByClient(selectedClientId);
+      const sorted = recs.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      const latest = sorted[0];
+      // Utiliser selectedClient de manière stable pour éviter les boucles
+      const currentSelectedClient = selectedClientRef.current;
+      const client = currentSelectedClient?.id === selectedClientId ? currentSelectedClient : null;
+
+      if (latest) {
+        setPrefill({
+          clientName: client?.name,
+          frame: {
+            brand: '',
+            model: '',
+            material: latest.frameMaterial || '',
+            color: '',
+            price: 0,
+          },
+          lens: {
+            material: latest.index ? 'organique' : 'organique',
+            index: latest.index || '1.6',
+            treatment: Array.isArray(latest.treatments) && latest.treatments.length > 0 
+              ? latest.treatments[0] 
+              : 'antireflet',
+            brand: 'Cabelans',
+            rightEye: {
+              sphere: latest.sphereRight?.toString() || '',
+              cylinder: latest.cylinderRight?.toString() || '',
+              axis: latest.axisRight?.toString() || '',
+              add: '',
+            },
+            leftEye: {
+              sphere: latest.sphereLeft?.toString() || '',
+              cylinder: latest.cylinderLeft?.toString() || '',
+              axis: latest.axisLeft?.toString() || '',
+              add: '',
+            },
+            pd: latest.pd as any,
+            price: 0,
+            rightEyePrice: 0,
+            leftEyePrice: 0,
+          },
+        });
+      } else if (client) {
+        setPrefill({ clientName: client.name });
+      } else {
+        setPrefill(null);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du préremplissage:', error);
+      setPrefill(null);
+    } finally {
+      isLoadingRef.current = false;
+    }
+    // Ne dépendre que de selectedClientId pour éviter les boucles
+    // opticsStore et selectedClient changent trop souvent et causent des boucles infinies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClientId]);
 
   const resetPrefill = useCallback(() => {
     setPrefill(null);
@@ -144,6 +244,7 @@ export function useOpticsInvoicePrefill({
   return {
     prefill,
     resetPrefill,
+    loadPrefill,
   };
 }
 

@@ -5,7 +5,9 @@ import { z } from 'zod';
 
 import { requireAuth, type AuthenticatedRequest } from '@middlewares/requireAuth.js';
 
+import { ClientType, TenantModel } from '../tenants/model.js';
 import { tenantRegistry } from '../tenants/registry.js';
+import { Capability, FeatureFlag } from '../tenants/types.js';
 import { User } from '../users/model.js';
 
 import {
@@ -24,6 +26,7 @@ const registerSchema = z.object({
   tenantId: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(8),
+  clientType: z.enum(['generic', 'optician']).optional().default('generic'),
   // Informations personnelles (optionnelles)
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -108,12 +111,21 @@ function signTokens(userId: string, tenantId: string) {
 }
 
 router.post('/register', async (req: Request, res: Response) => {
+  // Désactiver la création de compte en production
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      error: 'Registration is disabled in production',
+      message: 'La création de compte est désactivée en production'
+    });
+  }
+
   const parse = registerSchema.safeParse(req.body);
   if (!parse.success) return res.status(400).json(handleValidationError(parse.error));
   const {
     tenantId,
     email,
     password,
+    clientType,
     firstName,
     lastName,
     phone,
@@ -130,6 +142,7 @@ router.post('/register', async (req: Request, res: Response) => {
   console.log("Données d'inscription reçues:", {
     tenantId,
     email,
+    clientType,
     firstName,
     lastName,
     phone,
@@ -144,6 +157,36 @@ router.post('/register', async (req: Request, res: Response) => {
 
   const existing = await User.findOne({ email });
   if (existing) return res.status(409).json(handleAuthDuplicateError());
+
+  // Créer ou mettre à jour le tenant avec les bonnes capabilities
+  const existingTenant = await TenantModel.findOne({ tenantId });
+  
+  if (!existingTenant) {
+    // Déterminer les capabilities en fonction du clientType
+    const capabilities: Capability[] = clientType === 'optician' 
+      ? [Capability.Dashboard, Capability.Clients, Capability.Appointments, Capability.Invoices, Capability.Optics]
+      : [Capability.Dashboard, Capability.Clients, Capability.Appointments, Capability.Invoices];
+    
+    const featureFlags: Partial<Record<FeatureFlag, boolean>> = clientType === 'optician'
+      ? {
+          [FeatureFlag.OpticsMeasurements]: true,
+          [FeatureFlag.OpticsPrescriptions]: true,
+          [FeatureFlag.OpticsPrint]: true,
+        }
+      : {};
+
+    await TenantModel.create({
+      tenantId,
+      clientType: clientType as ClientType,
+      capabilities,
+      featureFlags,
+    });
+
+    // Recharger le registry pour inclure le nouveau tenant
+    await tenantRegistry.load();
+
+    console.log('Tenant créé:', { tenantId, clientType, capabilities, featureFlags });
+  }
 
   const passwordHash = await bcrypt.hash(password, Number(process.env.BCRYPT_SALT_ROUNDS || 12));
 

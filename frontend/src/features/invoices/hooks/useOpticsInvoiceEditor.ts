@@ -79,6 +79,162 @@ export interface UseOpticsInvoiceEditorReturn {
   generateInvoiceData: () => Partial<Invoice>;
 }
 
+/**
+ * Extrait les données de monture et de verres depuis les items d'une facture
+ */
+function extractDataFromInvoiceItems(invoice: Invoice | null | undefined): {
+  frameData?: Partial<FrameData>;
+  lensData?: Partial<LensData>;
+} {
+  if (!invoice?.items || invoice.items.length === 0) {
+    return {};
+  }
+
+  const frameData: Partial<FrameData> = {};
+  const lensData: Partial<LensData> = {
+    rightEye: { sphere: '', cylinder: '', axis: '', add: '' },
+    leftEye: { sphere: '', cylinder: '', axis: '', add: '' },
+  };
+
+  // Parcourir les items pour extraire les données
+  for (const item of invoice.items) {
+    const name = item.name || item.description || '';
+    const description = item.description || '';
+    const category = (item as any).category;
+
+    // Item de monture
+    if (category === 'frame' || name.toLowerCase().includes('monture') || description.toLowerCase().includes('monture')) {
+      frameData.price = item.unitPrice || 0;
+      
+      // Extraire les informations depuis le nom/description
+      // Format possible: "Monture métal ENRP" ou "Monture métal ENRP modèle"
+      const frameMatch = name.match(/monture\s+(\w+)\s+([^\s]+)(?:\s+([^\s]+))?/i);
+      if (frameMatch) {
+        frameData.material = frameMatch[1] || 'métal';
+        frameData.brand = frameMatch[2] || '';
+        frameData.model = frameMatch[3] || '';
+      }
+      
+      // Si frameData existe dans l'item (depuis le backend)
+      if ((item as any).frameData) {
+        const fd = (item as any).frameData;
+        frameData.brand = fd.brand || frameData.brand;
+        frameData.model = fd.model || frameData.model;
+        frameData.material = fd.material || frameData.material;
+        frameData.color = fd.color || frameData.color;
+      }
+    }
+
+    // Item de verres
+    if (category === 'lens' || name.toLowerCase().includes('verre') || description.toLowerCase().includes('verre')) {
+      lensData.price = (lensData.price || 0) + (item.unitPrice || 0);
+      
+      // Extraire les informations depuis le nom/description
+      // Format possible: "Verres organique 1.6 antireflet Cabelans"
+      const lensMatch = name.match(/verre\w*\s+(\w+)\s+([\d.]+)\s+(\w+)\s+(\w+)/i);
+      if (lensMatch) {
+        lensData.material = lensMatch[1] || 'organique';
+        lensData.index = lensMatch[2] || '1.6';
+        lensData.treatment = lensMatch[3] || 'antireflet';
+        lensData.brand = lensMatch[4] || 'Cabelans';
+      }
+      
+      // Si lensData existe dans l'item (depuis le backend)
+      if ((item as any).lensData) {
+        const ld = (item as any).lensData;
+        lensData.material = ld.material || lensData.material;
+        lensData.index = ld.index || lensData.index;
+        lensData.treatment = ld.treatment || lensData.treatment;
+        lensData.brand = ld.brand || lensData.brand;
+        if (ld.rightEye) {
+          lensData.rightEye = {
+            sphere: String(ld.rightEye.sphere || ''),
+            cylinder: String(ld.rightEye.cylinder || ''),
+            axis: String(ld.rightEye.axis || ''),
+            add: String(ld.rightEye.add || ''),
+          };
+        }
+        if (ld.leftEye) {
+          lensData.leftEye = {
+            sphere: String(ld.leftEye.sphere || ''),
+            cylinder: String(ld.leftEye.cylinder || ''),
+            axis: String(ld.leftEye.axis || ''),
+            add: String(ld.leftEye.add || ''),
+          };
+        }
+        if (ld.pd !== undefined) {
+          lensData.pd = ld.pd;
+        }
+      }
+    }
+
+    // Item de correction (format: "V.OD3 Plan (sphere cylinder à axis)" ou "V.OG3 Plan (...)")
+    const correctionMatch = name.match(/V\.(OD|OG)3\s+Plan\s+\(([-\d.]+)\s*([-\d.]+)?\s*à\s*(\d+)\)/i);
+    if (correctionMatch) {
+      const eye = correctionMatch[1].toLowerCase() === 'od' ? 'rightEye' : 'leftEye';
+      const sphere = correctionMatch[2];
+      const cylinder = correctionMatch[3] || '';
+      const axis = correctionMatch[4];
+      
+      if (eye === 'rightEye') {
+        lensData.rightEyePrice = item.unitPrice || 0;
+        if (lensData.rightEye) {
+          lensData.rightEye.sphere = sphere;
+          lensData.rightEye.cylinder = cylinder;
+          lensData.rightEye.axis = axis;
+        }
+      } else {
+        lensData.leftEyePrice = item.unitPrice || 0;
+        if (lensData.leftEye) {
+          lensData.leftEye.sphere = sphere;
+          lensData.leftEye.cylinder = cylinder;
+          lensData.leftEye.axis = axis;
+        }
+      }
+    }
+  }
+
+  // Extraire les données de correction depuis les notes
+  if (invoice.notes) {
+    const notesMatch = invoice.notes.match(/OD\s+([-\d.]+)\s+([-\d.]+)?\s+(\d+)(?:\s+([-\d.]+))?\s*\/\s*OG\s+([-\d.]+)\s+([-\d.]+)?\s+(\d+)(?:\s+([-\d.]+))?\s*-\s*PD:\s*(.+)/i);
+    if (notesMatch) {
+      lensData.rightEye = {
+        sphere: notesMatch[1] || '',
+        cylinder: notesMatch[2] || '',
+        axis: notesMatch[3] || '',
+        add: notesMatch[4] || '',
+      };
+      lensData.leftEye = {
+        sphere: notesMatch[5] || '',
+        cylinder: notesMatch[6] || '',
+        axis: notesMatch[7] || '',
+        add: notesMatch[8] || '',
+      };
+      const pdStr = notesMatch[9]?.trim();
+      if (pdStr) {
+        // Parser PD (peut être un nombre ou "mono: od/og + near")
+        const monoMatch = pdStr.match(/mono:\s*([\d.]+)\/([\d.]+)(?:\s*\+\s*([\d.]+))?/i);
+        if (monoMatch) {
+          lensData.pd = {
+            mono: {
+              od: parseFloat(monoMatch[1]),
+              og: parseFloat(monoMatch[2]),
+            },
+            near: monoMatch[3] ? parseFloat(monoMatch[3]) : undefined,
+          };
+        } else {
+          const pdNum = parseFloat(pdStr);
+          if (!isNaN(pdNum)) {
+            lensData.pd = pdNum;
+          }
+        }
+      }
+    }
+  }
+
+  return { frameData, lensData };
+}
+
 export function useOpticsInvoiceEditor({ 
   invoice, 
   clientName: propClientName,
@@ -88,35 +244,60 @@ export function useOpticsInvoiceEditor({
 }: UseOpticsInvoiceEditorProps): UseOpticsInvoiceEditorReturn {
   const { t } = useTranslation();
   
+  // Extraire les données depuis les items de la facture si elle existe
+  const extractedData = invoice ? extractDataFromInvoiceItems(invoice) : {};
+  const invoiceFrameData = extractedData.frameData || {};
+  const invoiceLensData = extractedData.lensData || {};
+  
   const [frameData, setFrameData] = useState<FrameData>({
-    brand: initialFrameData?.brand || '',
-    model: initialFrameData?.model || '',
-    material: initialFrameData?.material || 'métal',
-    color: initialFrameData?.color || '',
-    price: typeof initialFrameData?.price === 'number' ? initialFrameData!.price! : 0
+    brand: invoiceFrameData.brand || initialFrameData?.brand || '',
+    model: invoiceFrameData.model || initialFrameData?.model || '',
+    material: invoiceFrameData.material || initialFrameData?.material || 'métal',
+    color: invoiceFrameData.color || initialFrameData?.color || '',
+    price: typeof invoiceFrameData.price === 'number' ? invoiceFrameData.price : (typeof initialFrameData?.price === 'number' ? initialFrameData.price : 0)
   });
 
   const [lensData, setLensData] = useState<LensData>({
-    material: initialLensData?.material || 'organique',
-    index: initialLensData?.index || '1.6',
-    treatment: initialLensData?.treatment || 'antireflet',
-    brand: initialLensData?.brand || 'Cabelans',
-    rightEye: {
-      sphere: initialLensData?.rightEye?.sphere || '',
-      cylinder: initialLensData?.rightEye?.cylinder || '',
-      axis: initialLensData?.rightEye?.axis || '',
-      add: initialLensData?.rightEye?.add || ''
-    },
-    leftEye: {
-      sphere: initialLensData?.leftEye?.sphere || '',
-      cylinder: initialLensData?.leftEye?.cylinder || '',
-      axis: initialLensData?.leftEye?.axis || '',
-      add: initialLensData?.leftEye?.add || ''
-    },
-    pd: (initialLensData?.pd as any) ?? ('' as string | number | { mono: { od: number; og: number }; near?: number }),
-    price: typeof initialLensData?.price === 'number' ? initialLensData!.price! : 0,
-    rightEyePrice: typeof initialLensData?.rightEyePrice === 'number' ? initialLensData!.rightEyePrice! : 0,
-    leftEyePrice: typeof initialLensData?.leftEyePrice === 'number' ? initialLensData!.leftEyePrice! : 0
+    material: invoiceLensData.material || initialLensData?.material || 'organique',
+    index: invoiceLensData.index || initialLensData?.index || '1.6',
+    treatment: invoiceLensData.treatment || initialLensData?.treatment || 'antireflet',
+    brand: invoiceLensData.brand || initialLensData?.brand || 'Cabelans',
+    rightEye: invoiceLensData.rightEye ? {
+      sphere: invoiceLensData.rightEye.sphere || '',
+      cylinder: invoiceLensData.rightEye.cylinder || '',
+      axis: invoiceLensData.rightEye.axis || '',
+      add: invoiceLensData.rightEye.add || ''
+    } : (initialLensData?.rightEye ? {
+      sphere: initialLensData.rightEye.sphere || '',
+      cylinder: initialLensData.rightEye.cylinder || '',
+      axis: initialLensData.rightEye.axis || '',
+      add: initialLensData.rightEye.add || ''
+    } : {
+      sphere: '',
+      cylinder: '',
+      axis: '',
+      add: ''
+    }),
+    leftEye: invoiceLensData.leftEye ? {
+      sphere: invoiceLensData.leftEye.sphere || '',
+      cylinder: invoiceLensData.leftEye.cylinder || '',
+      axis: invoiceLensData.leftEye.axis || '',
+      add: invoiceLensData.leftEye.add || ''
+    } : (initialLensData?.leftEye ? {
+      sphere: initialLensData.leftEye.sphere || '',
+      cylinder: initialLensData.leftEye.cylinder || '',
+      axis: initialLensData.leftEye.axis || '',
+      add: initialLensData.leftEye.add || ''
+    } : {
+      sphere: '',
+      cylinder: '',
+      axis: '',
+      add: ''
+    }),
+    pd: invoiceLensData.pd !== undefined ? invoiceLensData.pd : (initialLensData?.pd !== undefined ? initialLensData.pd : ('' as string | number | { mono: { od: number; og: number }; near?: number })),
+    price: typeof invoiceLensData.price === 'number' ? invoiceLensData.price : (typeof initialLensData?.price === 'number' ? initialLensData.price : 0),
+    rightEyePrice: typeof invoiceLensData.rightEyePrice === 'number' ? invoiceLensData.rightEyePrice : (typeof initialLensData?.rightEyePrice === 'number' ? initialLensData.rightEyePrice : 0),
+    leftEyePrice: typeof invoiceLensData.leftEyePrice === 'number' ? invoiceLensData.leftEyePrice : (typeof initialLensData?.leftEyePrice === 'number' ? initialLensData.leftEyePrice : 0)
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState(invoice?.number || initialInvoiceNumber || '');
@@ -127,6 +308,7 @@ export function useOpticsInvoiceEditor({
   const [selectedClientId, setSelectedClientId] = useState<string | null>(invoice?.client?.id || null);
 
   // Appliquer les données de préremplissage quand elles deviennent disponibles (uniquement en création)
+  // Utiliser uniquement `invoice` comme dépendance pour éviter les boucles infinies
   useEffect(() => {
     if (!invoice && initialFrameData) {
       setFrameData(prev => ({
@@ -138,7 +320,8 @@ export function useOpticsInvoiceEditor({
         ...(initialFrameData.price !== undefined && { price: initialFrameData.price }),
       }));
     }
-  }, [invoice, initialFrameData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice]);
 
   useEffect(() => {
     if (!invoice && initialLensData) {
@@ -170,7 +353,8 @@ export function useOpticsInvoiceEditor({
         ...(initialLensData.leftEyePrice !== undefined && { leftEyePrice: initialLensData.leftEyePrice }),
       }));
     }
-  }, [invoice, initialLensData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice]);
 
   const handleFrameChange = useCallback((field: keyof FrameData, value: string | number) => {
     setFrameData(prev => ({ ...prev, [field]: value }));

@@ -50,16 +50,12 @@ Les environnements sont configurés dans :
 ### API Key Header (sécurité)
 
 - `REQUIRED_HEADER_NAME` (optionnel) : Nom du header à vérifier (défaut: `x-api-key`)
-- `REQUIRED_HEADER_VALUE` (optionnel) : Valeur globale du header (priorité la plus haute)
-- `REQUIRED_HEADER_VALUE_DEV` (optionnel) : Valeur pour l'environnement de développement
-- `REQUIRED_HEADER_VALUE_STAGING` (optionnel) : Valeur pour l'environnement de staging
-- `REQUIRED_HEADER_VALUE_PROD` (optionnel) : Valeur pour l'environnement de production
+- `REQUIRED_HEADER_VALUE` (optionnel) : Valeur du header (globale, utilisée pour tous les envs)
 
 **Priorité de sélection :**
 
 1. `REQUIRED_HEADER_VALUE` (si défini, utilisé pour tous les environnements)
-2. `REQUIRED_HEADER_VALUE_{ENV}` (selon `NODE_ENV`)
-3. Si aucune valeur n'est définie, seule la présence du header est vérifiée
+2. Si aucune valeur n'est définie, seule la présence du header est vérifiée
 
 ### Notifications (optionnel)
 
@@ -98,13 +94,7 @@ JWT_SECRET=change-me-in-prod
 
 # API Key Header (sécurité)
 REQUIRED_HEADER_NAME=x-api-key
-# Option 1: Valeur globale pour tous les environnements
-# REQUIRED_HEADER_VALUE=ma-cle-globale
-
-# Option 2: Valeurs spécifiques par environnement (priorité si REQUIRED_HEADER_VALUE n'est pas défini)
-REQUIRED_HEADER_VALUE_DEV=dev-key-12345
-# REQUIRED_HEADER_VALUE_STAGING=staging-key-67890
-# REQUIRED_HEADER_VALUE_PROD=prod-key-secret
+REQUIRED_HEADER_VALUE=dev-key-12345
 
 # WhatsApp Providers (optionnels pour mock)
 WHATSAPP_META_TOKEN=
@@ -140,14 +130,12 @@ JWT_REFRESH_SECRET=dev_refresh_secret_change_me
 BCRYPT_SALT_ROUNDS=12
 
 REQUIRED_HEADER_NAME=x-api-key
-REQUIRED_HEADER_VALUE_DEV=dev-key-12345
-REQUIRED_HEADER_VALUE=
+REQUIRED_HEADER_VALUE=dev-key-12345
 
 # Frontend build
 REACT_APP_API_BASE_URL=/api
-REACT_APP_X_API_KEY=x-api-key
-REACT_APP_REQUIRED_HEADER_VALUE_DEV=dev-key-12345
-REACT_APP_REQUIRED_HEADER_VALUE_PROD=
+REQUIRED_HEADER_NAME=x-api-key
+REQUIRED_HEADER_VALUE=dev-key-12345
 ```
 
 ### Recette / Staging (`.env.rec`)
@@ -171,15 +159,12 @@ JWT_REFRESH_SECRET=rec_refresh_secret_change_me
 BCRYPT_SALT_ROUNDS=12
 
 REQUIRED_HEADER_NAME=x-api-key
-REQUIRED_HEADER_VALUE_STAGING=rec-key-67890
-REQUIRED_HEADER_VALUE=
+REQUIRED_HEADER_VALUE=rec-key-67890
 
 # Frontend build
 REACT_APP_API_BASE_URL=/api
-REACT_APP_X_API_KEY=x-api-key
-REACT_APP_REQUIRED_HEADER_VALUE_PROD=
-REACT_APP_REQUIRED_HEADER_VALUE= # option globale
-REACT_APP_REQUIRED_HEADER_VALUE_STAGING=rec-key-67890
+REQUIRED_HEADER_NAME=x-api-key
+REQUIRED_HEADER_VALUE=rec-key-67890
 ```
 
 ### Production (`.env.prod`)
@@ -202,10 +187,10 @@ JWT_REFRESH_SECRET=prod_refresh_secret_change_me
 BCRYPT_SALT_ROUNDS=12
 
 REQUIRED_HEADER_NAME=x-api-key
-REQUIRED_HEADER_VALUE_PROD=prod-key-secret
+REQUIRED_HEADER_VALUE=prod-key-secret
 
 # Frontend build
 REACT_APP_API_BASE_URL=/api
-REACT_APP_X_API_KEY=x-api-key
-REACT_APP_REQUIRED_HEADER_VALUE_PROD=prod-key-secret
+REQUIRED_HEADER_NAME=x-api-key
+REQUIRED_HEADER_VALUE=prod-key-secret
 ```

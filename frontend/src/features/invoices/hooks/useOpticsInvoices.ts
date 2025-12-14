@@ -44,7 +44,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
     limit?: number;
   }) => {
     if (!capabilities.canAccessOptics()) {
-      setError('Accès non autorisé aux factures optiques');
+      setError(t('errors.unauthorizedAccessMessage', { defaultValue: "Vous n'avez pas les permissions nécessaires pour accéder aux factures optiques." }));
       return;
     }
 
@@ -71,7 +71,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
   // Charger une facture spécifique
   const fetchInvoice = useCallback(async (id: string) => {
     if (!capabilities.canAccessOptics()) {
-      setError('Accès non autorisé aux factures optiques');
+      setError(t('errors.unauthorizedAccessMessage', { defaultValue: "Vous n'avez pas les permissions nécessaires pour accéder aux factures optiques." }));
       return;
     }
 
@@ -123,7 +123,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
   // Mettre à jour une facture
   const updateInvoice = useCallback(async (id: string, payload: OpticsInvoiceUpdatePayload): Promise<Invoice> => {
     if (!capabilities.hasCapability(Capability.Invoices)) {
-      throw new Error('Permission refusée pour modifier des factures');
+      throw new Error(t('errors.updatePermissionDenied', { defaultValue: 'Permission refusée pour modifier des factures' }));
     }
 
     setLoading(true);
@@ -153,7 +153,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
   // Supprimer une facture
   const deleteInvoice = useCallback(async (id: string): Promise<void> => {
     if (!capabilities.hasCapability(Capability.Invoices)) {
-      throw new Error('Permission refusée pour supprimer des factures');
+      throw new Error(t('errors.deletePermissionDenied', { defaultValue: 'Permission refusée pour supprimer des factures' }));
     }
 
     setLoading(true);
@@ -182,7 +182,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
   // Générer un PDF
   const generatePDF = useCallback(async (id: string): Promise<Blob> => {
     if (!capabilities.canPrintOptics()) {
-      throw new Error('Permission refusée pour imprimer des factures');
+      throw new Error(t('errors.printPermissionDenied', { defaultValue: 'Permission refusée pour imprimer des factures' }));
     }
 
     try {
@@ -197,7 +197,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
   // Envoyer par email
   const sendInvoice = useCallback(async (id: string, email: string): Promise<void> => {
     if (!capabilities.hasCapability(Capability.Invoices)) {
-      throw new Error('Permission refusée pour envoyer des factures');
+      throw new Error(t('errors.sendPermissionDenied', { defaultValue: 'Permission refusée pour envoyer des factures' }));
     }
 
     try {
@@ -221,7 +221,7 @@ export const useOpticsInvoices = ({ clientId, autoFetch = true }: UseOpticsInvoi
     notes?: string;
   }): Promise<Invoice> => {
     if (!capabilities.hasCapability(Capability.Invoices)) {
-      throw new Error('Permission refusée pour gérer les paiements');
+      throw new Error(t('errors.paymentPermissionDenied', { defaultValue: 'Permission refusée pour gérer les paiements' }));
     }
 
     try {

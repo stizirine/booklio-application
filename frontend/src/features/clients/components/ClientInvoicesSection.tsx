@@ -1,6 +1,6 @@
-import React from 'react';
 import Icon from '@assets/icons/Icon';
 import { Invoice, InvoiceCard, InvoiceStatistics } from '@features/invoices';
+import React from 'react';
 import { ClientInvoiceConfig } from '../types';
 
 interface ClientInvoicesSectionProps {

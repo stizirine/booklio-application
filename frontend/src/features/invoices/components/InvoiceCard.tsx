@@ -111,8 +111,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onClick, className =
       {/* Progress */}
       <div className="mt-1.5 sm:mt-2.5 pt-1.5 sm:pt-2.5 border-t border-gray-100">
         <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-          <span className="text-[9px] sm:text-[10px] font-medium text-gray-600">Payé {paidPct}%</span>
-          <span className="text-[9px] sm:text-[10px] font-semibold text-gray-700">Reste {money.format(computedDue)}</span>
+          <span className="text-[9px] sm:text-[10px] font-medium text-gray-600">
+            {t('invoices.paid', { defaultValue: 'Payé' })} {paidPct}%
+          </span>
+          <span className="text-[9px] sm:text-[10px] font-semibold text-gray-700">
+            {t('invoices.remaining', { defaultValue: 'Reste' })} {money.format(computedDue)}
+          </span>
         </div>
         <div className="h-1 sm:h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
           <div

@@ -153,7 +153,7 @@ const OpticsInvoicePrint: React.FC<OpticsInvoicePrintProps> = ({ invoice, client
           {/* Pied de page */}
           <div className="mt-8 pt-4 border-t border-gray-300">
             <p className="text-xs text-gray-600 text-center">
-              {t('invoices.issuedIn', { defaultValue: 'Fait à' })} {invoiceHeader.storeAddress.split(',')[1]?.trim() || 'Louveciennes'}, 
+              {t('invoices.issuedIn', { defaultValue: 'Fait à' })} {invoiceHeader.storeAddress.split(',')[1]?.trim() || t('invoices.defaultCity', { defaultValue: 'Louveciennes' })}, 
               {' '}{t('invoices.on', { defaultValue: 'le' })} {formatDate(invoice.issuedAt)}
             </p>
             <InvoiceFooter

@@ -174,7 +174,8 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
   // Charger les factures du client
   useEffect(() => {
     if (open && client?.id) {
-      invoicesHook.fetchInvoices({ clientId: client.id });
+      // Filtrer côté backend pour exclure les factures optiques (type InvoiceClient)
+      invoicesHook.fetchInvoices({ clientId: client.id, type: 'Invoice' });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, client?.id]);
@@ -291,7 +292,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
       
       // Rafraîchir les factures
       if (client?.id) {
-        await invoicesHook.fetchInvoices({ clientId: client.id });
+        await invoicesHook.fetchInvoices({ clientId: client.id, type: 'Invoice' });
       }
       
       // Rafraîchir les données du client depuis le backend
@@ -318,7 +319,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
           setSelectedInvoice(null);
           // Rafraîchir les factures
           if (client?.id) {
-            invoicesHook.fetchInvoices({ clientId: client.id });
+            invoicesHook.fetchInvoices({ clientId: client.id, type: 'Invoice' });
           }
           showSuccess(t('invoices.sendSuccess'), t('invoices.sendSuccessMessage'));
         } catch (error) {
@@ -350,7 +351,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
           
           // Rafraîchir les factures
           if (client?.id) {
-            await invoicesHook.fetchInvoices({ clientId: client.id });
+            await invoicesHook.fetchInvoices({ clientId: client.id, type: 'Invoice' });
           }
           
           // Rafraîchir les données du client depuis le backend
@@ -384,7 +385,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
       
       // Rafraîchir les factures
       if (client?.id) {
-        await invoicesHook.fetchInvoices({ clientId: client.id });
+        await invoicesHook.fetchInvoices({ clientId: client.id, type: 'Invoice' });
       }
       
       // Rafraîchir les données du client depuis le backend
@@ -405,7 +406,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
       
       // Rafraîchir les factures
       if (client?.id) {
-        await invoicesHook.fetchInvoices({ clientId: client.id });
+        await invoicesHook.fetchInvoices({ clientId: client.id, type: 'Invoice' });
       }
       
       // Rafraîchir les données du client depuis le backend
@@ -695,7 +696,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
                   leftIcon={<Icon name="plus" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                 >
                   <span className="hidden sm:inline">{t('invoices.newOpticsInvoice', { defaultValue: 'Nouvelle facture optique' })}</span>
-                  <span className="sm:hidden">+ Nouvelle facture</span>
+                  <span className="sm:hidden">Nouvelle facture</span>
                 </Button>
               </div>
               

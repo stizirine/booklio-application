@@ -1,5 +1,5 @@
 import api from '@services/api';
-import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload } from '../types';
+import { Invoice, InvoiceCreatePayload, InvoiceCreateResponse, InvoiceUpdatePayload, mapApiInvoiceToInvoice } from '../types';
 
 // Types spécifiques pour les factures optiques
 export interface OpticsInvoiceItem {
@@ -40,7 +40,47 @@ export interface OpticsInvoiceItem {
 
 export interface OpticsInvoiceCreatePayload extends Omit<InvoiceCreatePayload, 'items'> {
   items: OpticsInvoiceItem[];
+  type?: 'InvoiceClient' | 'Invoice'; // Type de facture pour identifier les factures optiques
   // Informations spécifiques à l'optique
+  prescriptionId?: string; // ID de la prescription optique
+  prescriptionSnapshot?: {
+    kind: 'glasses' | 'contacts';
+    correction: {
+      od: {
+        sphere?: number | null;
+        cylinder?: number | null;
+        axis?: number | null;
+        add?: number | null;
+        prism?: { value?: number | null; base?: string | null } | null;
+      };
+      og: {
+        sphere?: number | null;
+        cylinder?: number | null;
+        axis?: number | null;
+        add?: number | null;
+        prism?: { value?: number | null; base?: string | null } | null;
+      };
+    };
+    glassesParams?: {
+      lensType?: string;
+      index?: string;
+      treatments?: string[];
+      pd?: number | { mono: { od: number; og: number }; near?: number };
+      segmentHeight?: number;
+      vertexDistance?: number;
+      baseCurve?: number;
+      frame?: {
+        type?: string;
+        eye?: number;
+        bridge?: number;
+        temple?: number;
+        material?: string;
+      };
+    };
+    contactLensParams?: any;
+    issuedAt?: string;
+  };
+  // Rétrocompatibilité avec l'ancien format
   prescriptionData?: {
     rightEye: {
       sphere: number;
@@ -114,50 +154,65 @@ export const opticsInvoicesApi = {
     page?: number;
     limit?: number;
   }): Promise<Invoice[]> {
-    // Utiliser l'endpoint spécifique aux factures optiques
-    const response = await api.get('/v1/optician/invoices', { 
-      params
+    // Les factures optiques utilisent le même endpoint que les factures normales
+    // Filtrer par type 'InvoiceClient' pour ne récupérer que les factures optiques
+    const response = await api.get('/v1/invoices', { 
+      params: {
+        ...params,
+        type: 'InvoiceClient'
+      }
     });
-    return response.data;
+    const data = response.data;
+    // L'API peut retourner soit un objet avec { items: [...], page, pages, total }
+    // soit directement un tableau
+    const list: any[] = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+    return list.map(mapApiInvoiceToInvoice);
   },
 
   /**
    * Récupérer une facture optique par ID
    */
   async getOpticsInvoice(id: string): Promise<Invoice> {
-    const response = await api.get(`/v1/optician/invoices/${id}`);
-    return response.data;
+    const response = await api.get(`/v1/invoices/${id}`);
+    const data = response.data;
+    // L'API peut retourner soit { invoice: {...} } soit directement l'invoice
+    const invoiceData = data?.invoice || data;
+    return mapApiInvoiceToInvoice(invoiceData);
   },
 
   /**
    * Créer une nouvelle facture optique
    */
   async createOpticsInvoice(payload: OpticsInvoiceCreatePayload): Promise<Invoice> {
-    // Utiliser l'endpoint spécifique aux factures optiques
-    const response = await api.post('/v1/optician/invoices', payload);
-    return response.data;
+    // Les factures optiques utilisent le même endpoint que les factures normales
+    const response = await api.post('/v1/invoices', payload);
+    const data = response.data as InvoiceCreateResponse;
+    return mapApiInvoiceToInvoice(data.invoice);
   },
 
   /**
    * Mettre à jour une facture optique
    */
   async updateOpticsInvoice(id: string, payload: OpticsInvoiceUpdatePayload): Promise<Invoice> {
-    const response = await api.patch(`/v1/optician/invoices/${id}`, payload);
-    return response.data;
+    const response = await api.patch(`/v1/invoices/${id}`, payload);
+    const data = response.data;
+    // L'API peut retourner soit { invoice: {...} } soit directement l'invoice
+    const invoiceData = data?.invoice || data;
+    return mapApiInvoiceToInvoice(invoiceData);
   },
 
   /**
    * Supprimer une facture optique
    */
   async deleteOpticsInvoice(id: string): Promise<void> {
-    await api.delete(`/v1/optician/invoices/${id}`);
+    await api.delete(`/v1/invoices/${id}`);
   },
 
   /**
    * Générer un PDF pour une facture optique
    */
   async generateOpticsInvoicePDF(id: string): Promise<Blob> {
-    const response = await api.get(`/v1/optician/invoices/${id}/pdf`, {
+    const response = await api.get(`/v1/invoices/${id}/pdf`, {
       responseType: 'blob'
     });
     return response.data;
@@ -167,7 +222,7 @@ export const opticsInvoicesApi = {
    * Envoyer une facture optique par email
    */
   async sendOpticsInvoice(id: string, email: string): Promise<void> {
-    await api.post(`/v1/optician/invoices/${id}/send`, { email });
+    await api.post(`/v1/invoices/${id}/send`, { email });
   },
 
   /**
@@ -179,8 +234,11 @@ export const opticsInvoicesApi = {
     reference?: string;
     notes?: string;
   }): Promise<Invoice> {
-    const response = await api.post(`/v1/optician/invoices/${id}/payments`, paymentData);
-    return response.data;
+    const response = await api.post(`/v1/invoices/${id}/payments`, paymentData);
+    const data = response.data;
+    // L'API peut retourner soit { invoice: {...} } soit directement l'invoice
+    const invoiceData = data?.invoice || data;
+    return mapApiInvoiceToInvoice(invoiceData);
   },
 
   /**
@@ -196,7 +254,7 @@ export const opticsInvoicesApi = {
     pendingInvoices: number;
     averageAmount: number;
   }> {
-    const response = await api.get('/v1/optician/invoices/stats', { 
+    const response = await api.get('/v1/invoices/stats', { 
       params: {
         ...params,
         type: 'optics'

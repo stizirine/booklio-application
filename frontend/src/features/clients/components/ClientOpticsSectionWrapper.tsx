@@ -1,8 +1,7 @@
-import React from 'react';
 import Icon from '@assets/icons/Icon';
-import { Button } from '@components/ui';
 import OpticsSection from '@optics/components/OpticsSection';
 import { Client } from '@stores/clientStore';
+import React from 'react';
 
 interface ClientOpticsSectionWrapperProps {
   isOptician: boolean;
@@ -14,7 +13,7 @@ interface ClientOpticsSectionWrapperProps {
 const ClientOpticsSectionWrapper: React.FC<ClientOpticsSectionWrapperProps> = ({
   isOptician,
   client,
-  onCreateOpticsInvoice,
+  onCreateOpticsInvoice: _onCreateOpticsInvoice,
   t,
 }) => {
   if (!isOptician) return null;
@@ -27,7 +26,7 @@ const ClientOpticsSectionWrapper: React.FC<ClientOpticsSectionWrapperProps> = ({
           <span className="truncate">{t('clients.opticsFile', { defaultValue: 'Dossier Optique' })} - {client?.name}</span>
         </h4>
         
-        <Button
+        {/* <Button
           onClick={onCreateOpticsInvoice}
           size="md"
           variant="gradient"
@@ -35,8 +34,8 @@ const ClientOpticsSectionWrapper: React.FC<ClientOpticsSectionWrapperProps> = ({
           leftIcon={<Icon name="plus" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
         >
           <span className="hidden sm:inline">{t('invoices.newOpticsInvoice', { defaultValue: 'Nouvelle facture optique' })}</span>
-          <span className="sm:hidden">+ Nouvelle facture</span>
-        </Button>
+          <span className="sm:hidden">Nouvelle facture</span>
+        </Button> */}
       </div>
       
       <OpticsSection client={client} />

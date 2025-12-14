@@ -50,6 +50,12 @@ const ProfilePage: React.FC = () => {
         ? () => modal.handleSubmitStore()
         : () => modal.handleSubmitProfile();
 
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    window.dispatchEvent(new Event('authChanged'));
+  };
+
   return (
     <div className="bg-[var(--color-bg)]">
       <div className="max-w-5xl mx-auto">
@@ -59,6 +65,7 @@ const ProfilePage: React.FC = () => {
           <div className="sticky top-0 z-30 bg-[var(--color-card)] border-b border-[var(--color-border)] lg:rounded-t-[var(--radius-md)]">
             <ProfileModalHeader 
               title={modal.t('profile.title')}
+              onLogout={handleLogout}
             />
           </div>
 

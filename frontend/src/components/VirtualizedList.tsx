@@ -30,10 +30,14 @@ export function VirtualizedList<T>({ items, rowHeight = 88, overscan = 8, classN
   const virtualItems = virtualizer.getVirtualItems();
 
   return (
-    <div ref={parentRef} className={`relative overflow-auto ${className}`}>
+    <div 
+      ref={parentRef} 
+      className={`relative overflow-auto ${className}`}
+    >
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
         {virtualItems.map((vi) => {
           const item = items[vi.index];
+          if (!item) return null;
           return (
             <div
               key={vi.key}

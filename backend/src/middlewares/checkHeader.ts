@@ -55,37 +55,14 @@ export function checkHeaderValue(headerName: string, expectedValue: string, erro
  * Récupère la valeur attendue du header selon l'environnement
  * Priorité:
  * 1. REQUIRED_HEADER_VALUE (valeur globale)
- * 2. REQUIRED_HEADER_VALUE_{ENV} (valeur spécifique à l'environnement)
- * 3. undefined (vérification de présence uniquement)
+ * 2. undefined (vérification de présence uniquement)
  */
-function normalizeEnv(nodeEnvRaw: string): 'development' | 'staging' | 'production' {
-  const env = (nodeEnvRaw || 'development').toLowerCase();
-  if (env === 'rec' || env === 'recette') return 'staging';
-  if (env === 'prod') return 'production';
-  if (env === 'staging' || env === 'production' || env === 'development') return env as 'development' | 'staging' | 'production';
-  return 'development';
-}
-
 function getExpectedHeaderValue(): string | undefined {
   const secrets = getSecrets();
-  const nodeEnv = normalizeEnv(process.env.NODE_ENV || 'development');
 
   // Valeur globale (priorité la plus haute)
   if (secrets.REQUIRED_HEADER_VALUE) {
     return secrets.REQUIRED_HEADER_VALUE;
-  }
-
-  // Valeur spécifique à l'environnement
-  if (nodeEnv === 'production' && secrets.REQUIRED_HEADER_VALUE_PROD) {
-    return secrets.REQUIRED_HEADER_VALUE_PROD;
-  }
-
-  if (nodeEnv === 'staging' && secrets.REQUIRED_HEADER_VALUE_STAGING) {
-    return secrets.REQUIRED_HEADER_VALUE_STAGING;
-  }
-
-  if (nodeEnv === 'development' && secrets.REQUIRED_HEADER_VALUE_DEV) {
-    return secrets.REQUIRED_HEADER_VALUE_DEV;
   }
 
   // Pas de valeur spécifique - vérification de présence uniquement
@@ -97,11 +74,14 @@ function getExpectedHeaderValue(): string | undefined {
  * Utilise REQUIRED_HEADER_NAME et REQUIRED_HEADER_VALUE depuis .env
  * Supporte des valeurs différentes par environnement (dev, staging, prod)
  * Exclut automatiquement les routes système et les routes d'authentification publiques
+ * 
+ * En développement (NODE_ENV=development), le header est optionnel si REQUIRED_HEADER_VALUE n'est pas défini
  */
 export function checkRequiredHeader() {
   const secrets = getSecrets();
   const headerName = secrets.REQUIRED_HEADER_NAME || 'x-api-key';
   const expectedValue = getExpectedHeaderValue();
+  const isDevelopment = secrets.NODE_ENV === 'development';
 
   // Routes système à exclure de la vérification
   const excludedSystemPaths = ['/health', '/metrics', '/docs', '/docs.json'];
@@ -117,6 +97,11 @@ export function checkRequiredHeader() {
 
     // Ignorer la vérification pour les routes d'authentification publiques
     if (excludedAuthPaths.some((path) => req.path === path)) {
+      return next();
+    }
+
+    // En développement, si pas de valeur attendue spécifiée, rendre le header optionnel
+    if (isDevelopment && !expectedValue) {
       return next();
     }
 

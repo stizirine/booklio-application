@@ -7,12 +7,14 @@ interface ProfileHeaderProps {
   onEditClick: () => void;
   onPasswordChangeClick: () => void;
   onStoreEditClick: () => void;
+  onLogout: () => void;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onEditClick,
   onPasswordChangeClick,
-  onStoreEditClick
+  onStoreEditClick,
+  onLogout
 }) => {
   const { t } = useTranslation();
 
@@ -63,6 +65,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             leftIcon={<Icon name="building" className="w-4 h-4" />}
           >
             {t('profile.editStoreInfo', { defaultValue: 'Modifier le magasin' })}
+          </Button>
+          
+          <Button
+            onClick={onLogout}
+            variant="secondary"
+            size="sm"
+            className="border border-[var(--color-border)] text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
+            leftIcon={<Icon name="logout" className="w-4 h-4" />}
+          >
+            {t('profile.logout', { defaultValue: 'Déconnexion' })}
           </Button>
         </div>
       </div>

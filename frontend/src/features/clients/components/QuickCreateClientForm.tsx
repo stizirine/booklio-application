@@ -72,9 +72,22 @@ const QuickCreateClientForm: React.FC<QuickCreateClientFormProps> = ({ disabled,
               setCreating(true);
               await onCreate(form);
               setForm({ firstName: '', lastName: '', email: '', phone: '', address: '' });
-              showSuccess('Client créé', `${form.firstName} ${form.lastName} a été ajouté avec succès`);
+              showSuccess(
+                t('clients.createSuccess', { defaultValue: 'Client créé' }),
+                t('clients.createSuccessMessage', { 
+                  defaultValue: '{{firstName}} {{lastName}} a été ajouté avec succès',
+                  firstName: form.firstName,
+                  lastName: form.lastName
+                })
+              );
             } catch (error) {
-              showError('Erreur', `Impossible de créer le client: ${error}`);
+              showError(
+                t('common.error', { defaultValue: 'Erreur' }),
+                t('clients.createErrorMessage', { 
+                  defaultValue: 'Impossible de créer le client: {{error}}',
+                  error: String(error)
+                })
+              );
             } finally {
               setCreating(false);
             }

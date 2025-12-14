@@ -31,8 +31,111 @@ const paymentEntrySchema = z.object({
   notes: z.string().optional(),
 });
 
+// Schéma pour prescriptionSnapshot (simplifié pour la validation)
+const prescriptionSnapshotSchema = z.object({
+  kind: z.enum(['glasses', 'contacts']),
+  correction: z.object({
+    od: z.object({
+      sphere: z.number().nullable().optional(),
+      cylinder: z.number().nullable().optional(),
+      axis: z.number().nullable().optional(),
+      add: z.number().nullable().optional(),
+      prism: z.object({
+        value: z.number().nullable().optional(),
+        base: z.string().nullable().optional(),
+      }).nullable().optional(),
+    }),
+    og: z.object({
+      sphere: z.number().nullable().optional(),
+      cylinder: z.number().nullable().optional(),
+      axis: z.number().nullable().optional(),
+      add: z.number().nullable().optional(),
+      prism: z.object({
+        value: z.number().nullable().optional(),
+        base: z.string().nullable().optional(),
+      }).nullable().optional(),
+    }),
+  }),
+  glassesParams: z.object({
+    lensType: z.string().optional(),
+    index: z.string().optional(),
+    treatments: z.array(z.string()).optional(),
+    pd: z.union([z.number(), z.object({
+      mono: z.object({
+        od: z.number(),
+        og: z.number(),
+      }),
+      near: z.number().optional(),
+    })]).optional(),
+    segmentHeight: z.number().optional(),
+    vertexDistance: z.number().optional(),
+    baseCurve: z.number().optional(),
+    frame: z.object({
+      type: z.string().optional(),
+      eye: z.number().optional(),
+      bridge: z.number().optional(),
+      temple: z.number().optional(),
+      material: z.string().optional(),
+    }).optional(),
+  }).optional(),
+  contactLensParams: z.any().optional(),
+  issuedAt: z.string().datetime().optional(),
+}).optional();
+
+// Schéma pour les items de facture
+const invoiceItemSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  quantity: z.number().min(0).default(1),
+  unitPrice: z.number().min(0).default(0),
+  category: z.enum(['frame', 'lens', 'service']).optional(),
+  taxRate: z.number().min(0).max(1).optional(),
+  discountAmount: z.number().min(0).optional(),
+  frameData: z.object({
+    brand: z.string().optional(),
+    model: z.string().optional(),
+    material: z.string().optional(),
+    color: z.string().optional(),
+  }).optional(),
+  lensData: z.object({
+    material: z.string().optional(),
+    index: z.string().optional(),
+    treatment: z.string().optional(),
+    brand: z.string().optional(),
+    rightEye: z.object({
+      sphere: z.string().optional(),
+      cylinder: z.string().optional(),
+      axis: z.string().optional(),
+      add: z.string().optional(),
+    }).optional(),
+    leftEye: z.object({
+      sphere: z.string().optional(),
+      cylinder: z.string().optional(),
+      axis: z.string().optional(),
+      add: z.string().optional(),
+    }).optional(),
+    pd: z.union([z.number(), z.object({
+      mono: z.object({
+        od: z.number(),
+        og: z.number(),
+      }),
+      near: z.number().optional(),
+    })]).optional(),
+  }).optional(),
+});
+
 const createSchema = z.object({
-  clientId: z.string().min(1),
+  clientId: z.string().min(1).refine(
+    (val) => {
+      // Vérifier que c'est un ObjectId MongoDB valide (24 caractères hexadécimaux)
+      return /^[0-9a-fA-F]{24}$/.test(val);
+    },
+    {
+      message: 'clientId must be a valid MongoDB ObjectId',
+    }
+  ),
+  type: z.enum(['InvoiceClient', 'Invoice']).optional().default('Invoice'),
   totalAmount: z.number().min(0),
   advanceAmount: z.number().min(0).default(0),
   creditAmount: z.number().min(0).default(0),
@@ -40,6 +143,9 @@ const createSchema = z.object({
   notes: notesSchema,
   payment: paymentEntrySchema.optional(), // Objet unique (rétrocompatibilité)
   payments: z.array(paymentEntrySchema).optional(), // Tableau de paiements
+  prescriptionId: z.string().optional(), // ID de la prescription optique
+  prescriptionSnapshot: prescriptionSnapshotSchema, // Snapshot de prescription
+  items: z.array(invoiceItemSchema).optional(), // Items de la facture
 });
 
 const updateSchema = z.object({
@@ -49,13 +155,15 @@ const updateSchema = z.object({
   creditAmount: z.number().min(0).optional(),
   currency: SupportedCurrencySchema.optional(),
   notes: notesSchema,
+  items: z.array(invoiceItemSchema).optional(), // Items de la facture
+  type: z.enum(['InvoiceClient', 'Invoice']).optional(), // Type de facture
 });
 
 router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const current = req.user!;
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(handleValidationError(parsed.error));
-  const { payment, payments, advanceAmount, ...restData } = parsed.data;
+  const { payment, payments, advanceAmount, prescriptionSnapshot, ...restData } = parsed.data;
 
   // Construire le payload de base
   const invoicePayload: Record<string, unknown> = {
@@ -63,6 +171,15 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
     deletedAt: null,
     ...restData,
   };
+
+  // Ajouter prescriptionSnapshot si fourni (convertir issuedAt en Date si présent)
+  if (prescriptionSnapshot) {
+    const snapshot: Record<string, unknown> = { ...prescriptionSnapshot };
+    if (snapshot.issuedAt && typeof snapshot.issuedAt === 'string') {
+      snapshot.issuedAt = new Date(snapshot.issuedAt);
+    }
+    invoicePayload.prescriptionSnapshot = snapshot;
+  }
 
   // Gestion des paiements : priorité dans l'ordre payments > payment > advanceAmount
   if (payments && payments.length > 0) {
@@ -152,7 +269,9 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
       currency: created.currency,
       status: created.status,
       notes: created.notes,
+      items: created.items || [],
       payments: created.payments || [],
+      type: (created as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: created.createdAt,
       updatedAt: created.updatedAt,
       deletedAt: created.deletedAt,
@@ -166,6 +285,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
   const current = req.user!;
   const {
     clientId,
+    type,
     limit = '20',
     page = '1',
     sort = '-createdAt',
@@ -176,6 +296,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
   } = req.query as Record<string, string | undefined>;
   const filter: Record<string, unknown> = { tenantId: current.tenantId };
   if (clientId) filter.clientId = clientId;
+  if (type) filter.type = type;
   if (onlyDeleted === 'true') filter.deletedAt = { $ne: null };
   else if (includeDeleted === 'true') {
     /* no filter */
@@ -203,6 +324,9 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
             phone?: string;
           })
         : undefined;
+    // Récupérer les items depuis le document Mongoose
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoiceItems = (inv as any).items || [];
     return {
       _id: inv._id,
       tenantId: inv.tenantId,
@@ -222,7 +346,9 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
       currency: inv.currency,
       status: inv.status,
       notes: inv.notes,
+      items: Array.isArray(invoiceItems) ? invoiceItems : [],
       payments: inv.payments || [],
+      type: (inv as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
       deletedAt: inv.deletedAt,
@@ -284,6 +410,9 @@ router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response)
   }
   const inv = await q;
   if (!inv) return res.status(404).json(handleNotFoundError('invoice'));
+  // Récupérer les items depuis le document Mongoose
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const invoiceItems = (inv as any).items || [];
   return res.json({
     invoice: {
       _id: inv._id,
@@ -313,7 +442,9 @@ router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response)
       currency: inv.currency,
       status: inv.status,
       notes: inv.notes,
+      items: Array.isArray(invoiceItems) ? invoiceItems : [],
       payments: inv.payments || [],
+      type: (inv as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: inv.createdAt,
       updatedAt: inv.updatedAt,
       deletedAt: inv.deletedAt,
@@ -397,6 +528,9 @@ router.patch('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respons
       currency: updated.currency,
       status: updated.status,
       notes: updated.notes,
+      items: updated.items || [],
+      payments: updated.payments || [],
+      type: (updated as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
       deletedAt: updated.deletedAt,
@@ -590,7 +724,9 @@ router.post('/:id/payments', requireAuth, async (req: AuthenticatedRequest, res:
       currency: invoice.currency,
       status: invoice.status,
       notes: invoice.notes,
+      items: invoice.items || [],
       payments: invoice.payments,
+      type: (invoice as { type?: 'InvoiceClient' | 'Invoice' }).type || 'Invoice',
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
       deletedAt: invoice.deletedAt,
@@ -694,6 +830,7 @@ router.delete(
         currency: invoice.currency,
         status: invoice.status,
         notes: invoice.notes,
+        items: invoice.items || [],
         payments: invoice.payments,
         createdAt: invoice.createdAt,
         updatedAt: invoice.updatedAt,

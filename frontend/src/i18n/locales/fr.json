@@ -27,7 +27,11 @@
     "invalidCredentials": "Email ou mot de passe invalide",
     "emailAlreadyExists": "Cet email est déjà utilisé",
     "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
-    "welcomeBack": "Bon retour, {{name}} !"
+    "welcomeBack": "Bon retour, {{name}} !",
+    "secureConnection": "Connexion sécurisée",
+    "noAccount": "Pas de compte ?",
+    "registerSubDescription": "Créez votre compte Booklio en quelques secondes, pensé pour mobile et desktop.",
+    "quickOnboarding": "Onboarding rapide"
   },
   "dashboard": {
     "title": "Booklio",
@@ -180,7 +184,11 @@
     "infoTab": "Infos",
     "appointmentsTab": "RDV",
     "invoicesTab": "Factures",
-    "opticsTab": "Optique"
+    "opticsTab": "Optique",
+    "opticsFile": "Dossier Optique",
+    "createSuccess": "Client créé",
+    "createSuccessMessage": "{{firstName}} {{lastName}} a été ajouté avec succès",
+    "createErrorMessage": "Impossible de créer le client: {{error}}"
   },
   "common": {
     "share": "Partager",
@@ -324,7 +332,14 @@
     "updateError": "Erreur lors de la mise à jour",
     "updateAppointmentError": "Erreur lors de la mise à jour du rendez-vous",
     "deleteError": "Erreur lors de la suppression",
-    "deleteAppointmentError": "Erreur lors de la suppression du rendez-vous"
+    "deleteAppointmentError": "Erreur lors de la suppression du rendez-vous",
+    "unauthorizedAccess": "Accès non autorisé",
+    "unauthorizedAccessMessage": "Vous n'avez pas les permissions nécessaires pour accéder aux factures optiques.",
+    "updatePermissionDenied": "Permission refusée pour modifier des factures",
+    "deletePermissionDenied": "Permission refusée pour supprimer des factures",
+    "printPermissionDenied": "Permission refusée pour imprimer des factures",
+    "sendPermissionDenied": "Permission refusée pour envoyer des factures",
+    "paymentPermissionDenied": "Permission refusée pour gérer les paiements"
   },
   "invoices": {
     "title": "Factures",
@@ -340,9 +355,12 @@
     "totalInvoiced": "Total facturé",
     "loadingSummary": "Chargement...",
     "create": "Créer une facture",
-    "edit": "Modifier la facture",
+    "edit": "Modifier",
     "for": "Pour",
     "currency": "Devise",
+    "currencySymbol": "DH",
+    "remaining": "Reste",
+    "defaultCity": "Louveciennes",
     "notes": "Notes",
     "detailedList": "Liste détaillée des factures",
     "noInvoices": "Aucune facture trouvée",
@@ -355,6 +373,7 @@
     "invoiceNumber": "Numéro de facture",
     "invoiceNumberPlaceholder": "0002091",
     "date": "Date",
+    "client": "Client",
     "clientNamePlaceholder": "Nom du client",
     "frame": "Monture",
     "lenses": "Verres",
@@ -406,6 +425,8 @@
     "print": "Imprimer",
     "opticsInvoices": "Factures Optiques",
     "opticsInvoicesDescription": "Gestion des factures pour montures et corrections optiques",
+    "finessAm": "FINESS/AM",
+    "clientRequired": "Veuillez sélectionner un client avant de créer la facture",
     "recentInvoices": "Factures récentes",
     "number": "Numéro",
     "amount": "Montant",

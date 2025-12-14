@@ -53,7 +53,6 @@ export const menuItems: MenuItem[] = [
     icon: 'glasses',
     labelKey: 'invoices.opticsInvoices',
     isActive: (path) => path.startsWith('/optics-invoices'),
-    className: 'text-blue-600',
   },
   {
     id: 'profile',
@@ -61,7 +60,6 @@ export const menuItems: MenuItem[] = [
     icon: 'user-circle',
     labelKey: 'profile.title',
     isActive: (path) => path.startsWith('/profile'),
-    className: 'text-purple-600',
   },
   {
     id: 'mobileTest',
