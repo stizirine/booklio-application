@@ -16,14 +16,11 @@ COPY package*.json package-lock.json* ./
 # Désactiver husky pour éviter les erreurs
 RUN node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));delete p.scripts.prepare;fs.writeFileSync('package.json',JSON.stringify(p,null,2))"
 # Installer TOUTES les dépendances (y compris devDependencies) de façon fiable
-ENV CI=true
+# Ne pas définir CI=true car cela peut empêcher l'installation des devDependencies
 ENV HUSKY=0
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-# Installer craco-alias si nécessaire (il est déclaré dans package.json)
-RUN npm install craco-alias@^3.0.1 --legacy-peer-deps --save-dev
+RUN npm ci --legacy-peer-deps --include=dev || npm install --legacy-peer-deps
+
 COPY . .
-# S'assurer que craco-alias est installé (dev dependency) après la copie
-RUN NODE_ENV=development npm install craco-alias@^3.0.1 --legacy-peer-deps --save-dev
 
 # Définir les variables d'environnement pour le build React
 ENV NODE_ENV=${NODE_ENV}
@@ -31,21 +28,15 @@ ENV REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
 ENV REACT_APP_REQUIRED_HEADER_NAME=${REQUIRED_HEADER_NAME}
 ENV REACT_APP_REQUIRED_HEADER_VALUE=${REQUIRED_HEADER_VALUE}
 
-# Exécuter le build React via craco (chemin garanti)
-ENV PATH="/usr/local/bin:/app/node_modules/.bin:${PATH}"
-ENV NODE_PATH="/app/node_modules"
-# Vérifier que craco-alias est bien présent puis lancer le build
-RUN ls node_modules | head && \
-    ls node_modules/craco-alias && \
-    node -e "console.log('craco-alias ->', require.resolve('craco-alias'))" && \
-    npx -y @craco/craco@7.1.0 build
+# Exécuter le build React via le binaire craco directement
+RUN ./node_modules/.bin/craco build || npx --yes @craco/craco build
 
 # Étape 2 : Serveur Nginx
 FROM nginx:alpine
 # Copie du build React
 COPY --from=build-stage /app/build /usr/share/nginx/html
-# Copie de NOTRE configuration Nginx personnalisée
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copie de la configuration Nginx (copiée dans build-stage avec COPY . .)
+COPY --from=build-stage /app/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
