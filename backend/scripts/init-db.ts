@@ -6,6 +6,7 @@
  * Usage:
  *   MONGO_URI="mongodb://..." ./backend/scripts/init-db.ts
  */
+import 'dotenv/config';
 import mongoose from 'mongoose';
 
 import { AppointmentModel } from '../src/modules/crm/appointments/model.js';
