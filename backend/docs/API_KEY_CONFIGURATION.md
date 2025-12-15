@@ -171,7 +171,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const excludedPaths = ['/health', '/metrics', '/docs', '/v1/auth/login', '/v1/auth/register'];
+  const excludedPaths = ['/health', '/metrics', '/docs', '/v1/auth/login', '/v1/auth/register', 'v1/optician/config'];
   const isExcluded = excludedPaths.some((path) => config.url?.startsWith(path));
 
   if (!isExcluded) {

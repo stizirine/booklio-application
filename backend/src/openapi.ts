@@ -1551,6 +1551,11 @@ export const openapiSpec: OpenAPIV3.Document = {
                     description: 'Numéro de téléphone du magasin',
                     example: '+33 1 23 45 67 89',
                   },
+                  storePhone: {
+                    type: 'string',
+                    description: 'Autre téléphone du magasin (WhatsApp, mobile, etc.)',
+                    example: '+33 1 23 45 67 89',
+                  },
                   patenteNumber: {
                     type: 'string',
                     description: 'Numéro de patente',
@@ -5183,6 +5188,11 @@ export const openapiSpec: OpenAPIV3.Document = {
           _id: { type: 'string' },
           tenantId: { type: 'string' },
           clientId: { type: 'string' },
+          invoiceNumber: {
+            type: 'integer',
+            description: 'Numéro de facture auto-incrémenté par tenant (1, 2, 3, ...)',
+            example: 1,
+          },
           totalAmount: { type: 'number' },
           advanceAmount: {
             type: 'number',

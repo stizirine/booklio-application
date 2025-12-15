@@ -124,7 +124,7 @@ const toBackendPrescriptionPayload = (p: OpticsRecordPayload) => {
         eye: n(p.frameEye) ?? 0,
         bridge: n(p.frameBridge) ?? 0,
         temple: n(p.frameTemple) ?? 0,
-        material: p.frameMaterial || 'generic',
+        material: p.frameMaterial || FrameMaterial.Acetate,
       }
     },
     // contactLensParams optionnel – inclus si des champs ont été saisis

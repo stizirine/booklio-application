@@ -17,7 +17,8 @@ program
   .option('--phone <phone>', 'Téléphone')
   .option('--store-name <storeName>', 'Nom du magasin')
   .option('--store-address <storeAddress>', 'Adresse du magasin')
-  .option('--phone-number <phoneNumber>', 'Numéro de téléphone du magasin')
+  .option('--phone-number <phoneNumber>', 'Numéro de téléphone fixe du magasin')
+  .option('--store-phone <storePhone>', 'Autre téléphone du magasin (WhatsApp, mobile, etc.)')
   .option('--patente <patenteNumber>', 'Numéro de patente')
   .option('--rc <rcNumber>', 'Numéro RC')
   .option('--npe <npeNumber>', 'Numéro NPE')
@@ -41,11 +42,14 @@ async function createAccount() {
       storeName,
       storeAddress,
       phoneNumber,
-      patenteNumber,
-      rcNumber,
-      npeNumber,
-      iceNumber,
-    } = options;
+      storePhone,
+      // Les flags CLI sont --patente, --rc, --npe, --ice
+      // Commander génère donc des propriétés options.patente, options.rc, etc.
+      patente,
+      rc,
+      npe,
+      ice,
+    } = options as any;
 
     console.log('🚀 Création du compte via l\'API...\n');
 
@@ -64,10 +68,11 @@ async function createAccount() {
     if (storeName) payload.storeName = storeName;
     if (storeAddress) payload.storeAddress = storeAddress;
     if (phoneNumber) payload.phoneNumber = phoneNumber;
-    if (patenteNumber) payload.patenteNumber = patenteNumber;
-    if (rcNumber) payload.rcNumber = rcNumber;
-    if (npeNumber) payload.npeNumber = npeNumber;
-    if (iceNumber) payload.iceNumber = iceNumber;
+    if (storePhone) payload.storePhone = storePhone;
+    if (patente) payload.patenteNumber = patente;
+    if (rc) payload.rcNumber = rc;
+    if (npe) payload.npeNumber = npe;
+    if (ice) payload.iceNumber = ice;
 
     // Préparer les headers
     const headers: Record<string, string> = {
@@ -79,7 +84,7 @@ async function createAccount() {
     }
 
     // Appel à l'API de registration
-    console.log(`📡 Appel à ${apiUrl}/v1/auth/register...`);
+    console.log(`📡 Appel à ${apiUrl}/v1/auth/register... ${JSON.stringify(payload, null, 2)}`);
     const response = await fetch(`${apiUrl}/v1/auth/register`, {
       method: 'POST',
       headers,

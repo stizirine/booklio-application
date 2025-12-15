@@ -35,10 +35,6 @@ function readJsonSafe(filePath: string): unknown | undefined {
 export class TenantRegistry {
   private byTenantId: Map<string, TenantConfig> = new Map();
 
-  constructor() {
-    this.load();
-  }
-
   async load(): Promise<void> {
     this.byTenantId.clear();
 
@@ -63,7 +59,7 @@ export class TenantRegistry {
       // ignore if DB not ready
     }
 
-    // Load from tenants/*.json if provided
+    // Load from tenants/*.json if provided (only for tenants not already in DB)
     const explicitDir = process.env.TENANTS_DIR;
     const moduleDir = path.dirname(fileURLToPath(import.meta.url));
     // project root = src/modules/tenants -> go up three levels
@@ -76,6 +72,12 @@ export class TenantRegistry {
         if (!data || typeof data !== 'object') continue;
         const j = data as Partial<TenantConfig>;
         if (!j.tenantId) continue;
+        
+        // Only load from JSON if tenant doesn't exist in DB
+        if (this.byTenantId.has(j.tenantId)) {
+          continue;
+        }
+        
         const cfg: TenantConfig = {
           tenantId: j.tenantId,
           clientType: j.clientType || resolvedDefaults.clientType,

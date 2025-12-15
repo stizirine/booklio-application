@@ -1,7 +1,8 @@
 #!/usr/bin/env tsx
 const BASE = process.env.BASE_URL || 'http://localhost:4000';
-const email = process.env.SMOKE_EMAIL || 'admin@booklio.com';
-const password = process.env.SMOKE_PASSWORD || 'P@ssw0rd123';
+const email = process.env.SMOKE_EMAIL || 'ichbilia-optique@gmail.com';
+const password = process.env.SMOKE_PASSWORD || 'OptiqueIchbilia2025!';
+const tenantId = process.env.TENANT_ID || 'ichbilia-optique';
 
 async function login(): Promise<string> {
   let res = await fetch(`${BASE}/v1/auth/login`, {
@@ -9,11 +10,12 @@ async function login(): Promise<string> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   } as any);
+  console.log('res', res);
   if (res.status === 401) {
     const reg = await fetch(`${BASE}/v1/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenantId: 't1', email, password }),
+      body: JSON.stringify({ tenantId, email, password }),
     } as any);
     if (!reg.ok && reg.status !== 409) throw new Error(`Register failed ${reg.status}`);
     res = await fetch(`${BASE}/v1/auth/login`, {
@@ -31,7 +33,10 @@ async function main() {
   const at = await login();
   console.log('Login OK');
   const res = await fetch(`${BASE}/v1/optician/config`, {
-    headers: { Authorization: `Bearer ${at}` },
+    headers: { 
+      Authorization: `Bearer ${at}`,
+      'x-api-key': 'dev-key-12345'
+    },
   } as any);
   if (!res.ok) throw new Error(`Config failed ${res.status}`);
   const cfg = (await res.json()) as any;

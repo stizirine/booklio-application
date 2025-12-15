@@ -79,6 +79,8 @@ export interface PrescriptionSnapshot {
 const invoiceSchema = new Schema(
   {
     tenantId: { type: String, required: true, index: true },
+    // Numéro de facture auto-incrémenté par tenant (1, 2, 3, ...)
+    invoiceNumber: { type: Number, required: true, index: true },
     clientId: {
       type: Schema.Types.ObjectId,
       ref: 'Client',
@@ -367,6 +369,9 @@ const invoiceSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Garantir l'unicité du numéro par tenant
+invoiceSchema.index({ tenantId: 1, invoiceNumber: 1 }, { unique: true });
 
 invoiceSchema.virtual('remainingAmount').get(function (this: Invoice) {
   const paid = (this.advanceAmount || 0) + (this.creditAmount || 0);

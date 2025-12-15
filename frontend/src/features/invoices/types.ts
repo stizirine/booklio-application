@@ -21,6 +21,7 @@ export interface PaymentEntry {
 export interface ApiInvoice {
   _id: string;
   tenantId: string;
+  invoiceNumber?: number;
   client?: {
     _id: string;
     firstName?: string;
@@ -186,6 +187,10 @@ export const mapPaymentEntryToPayment = (entry: PaymentEntry): Payment => ({
 
 export const mapApiInvoiceToInvoice = (api: ApiInvoice): Invoice => ({
   id: api._id,
+  number:
+    typeof api.invoiceNumber === 'number'
+      ? api.invoiceNumber.toString().padStart(4, '0')
+      : undefined,
   client: api.client
     ? {
         id: api.client._id,

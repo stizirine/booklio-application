@@ -109,7 +109,7 @@ app.use('/v1/appointments', appointmentsRouter);
 app.use('/v1/invoices', invoicesRouter);
 app.use('/v1/agent', agentRouter);
 app.use('/v1/tenants', resolveTenant, tenantsRouter);
-app.use('/v1/optician', resolveTenant, opticianRouter);
+app.use('/v1/optician', opticianRouter);
 
 // Internal cleanup route (test only)
 app.delete('/__internal__/users/:id', async (req, res) => {

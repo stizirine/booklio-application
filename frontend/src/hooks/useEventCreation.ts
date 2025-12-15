@@ -1,3 +1,4 @@
+import { AppointmentStatus } from '@src/types';
 import { ClientAppointmentNotes } from '@src/types/clients';
 import { useAppointmentStore } from '@stores/appointmentStore';
 import { useClientStore } from '@stores/clientStore';
@@ -58,10 +59,16 @@ export function useEventCreation(actions: any) {
       await appointmentStore.createAppointment({
         clientId: clientId || undefined,
         title: payload.title,
-        startAt: new Date(payload.start).toISOString(),
-        endAt: new Date(payload.end).toISOString(),
-        status: 'scheduled',
-        notes: payload.reason || payload.notes || ''
+        // On laisse le store normaliser les dates (et gérer les cas invalides)
+        start: payload.start,
+        end: payload.end,
+        status: AppointmentStatus.Scheduled,
+        notes: payload.reason || payload.notes || '',
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        customerEmail: payload.customerEmail,
+        phone: payload.phone,
+        address: payload.address,
       });
       
       await appointmentStore.fetchAppointments({ mode: 'day' });

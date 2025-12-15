@@ -34,6 +34,7 @@ const registerSchema = z.object({
   // Informations du magasin/entreprise (optionnelles)
   storeName: z.string().optional(),
   storeAddress: z.string().optional(),
+  storePhone: z.string().optional(),
   phoneNumber: z.string().optional(),
   patenteNumber: z.string().optional(),
   rcNumber: z.string().optional(),
@@ -55,6 +56,7 @@ const updateProfileSchema = z.object({
   storeName: z.string().optional(),
   storeAddress: z.string().optional(),
   phoneNumber: z.string().optional(),
+  storePhone: z.string().optional(),
   patenteNumber: z.string().optional(),
   rcNumber: z.string().optional(),
   npeNumber: z.string().optional(),
@@ -132,6 +134,7 @@ router.post('/register', async (req: Request, res: Response) => {
     storeName,
     storeAddress,
     phoneNumber,
+    storePhone,
     patenteNumber,
     rcNumber,
     npeNumber,
@@ -149,6 +152,7 @@ router.post('/register', async (req: Request, res: Response) => {
     storeName,
     storeAddress,
     phoneNumber,
+    storePhone,
     patenteNumber,
     rcNumber,
     npeNumber,
@@ -202,6 +206,7 @@ router.post('/register', async (req: Request, res: Response) => {
     storeName?: string;
     storeAddress?: string;
     phoneNumber?: string;
+    storePhone?: string;
     patenteNumber?: string;
     rcNumber?: string;
     npeNumber?: string;
@@ -221,6 +226,7 @@ router.post('/register', async (req: Request, res: Response) => {
   if (storeName) userData.storeName = storeName;
   if (storeAddress) userData.storeAddress = storeAddress;
   if (phoneNumber) userData.phoneNumber = phoneNumber;
+  if (storePhone) userData.storePhone = storePhone;
   if (patenteNumber) userData.patenteNumber = patenteNumber;
   if (rcNumber) userData.rcNumber = rcNumber;
   if (npeNumber) userData.npeNumber = npeNumber;
@@ -241,6 +247,7 @@ router.post('/register', async (req: Request, res: Response) => {
     storeName: user.storeName,
     storeAddress: user.storeAddress,
     phoneNumber: user.phoneNumber,
+    storePhone: user.storePhone,
     patenteNumber: user.patenteNumber,
     rcNumber: user.rcNumber,
     npeNumber: user.npeNumber,
@@ -261,6 +268,7 @@ router.post('/register', async (req: Request, res: Response) => {
       storeName: user.storeName,
       storeAddress: user.storeAddress,
       phoneNumber: user.phoneNumber,
+      storePhone: user.storePhone,
       patenteNumber: user.patenteNumber,
       rcNumber: user.rcNumber,
       npeNumber: user.npeNumber,
@@ -317,7 +325,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
 router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const current = req.user as { id: string; tenantId: string };
   const user = await User.findById(current.id).select(
-    'email tenantId roles firstName lastName phone storeName storeAddress phoneNumber patenteNumber rcNumber npeNumber iceNumber'
+    'email tenantId roles firstName lastName phone storeName storeAddress phoneNumber storePhone patenteNumber rcNumber npeNumber iceNumber'
   );
   if (!user) return res.status(404).json(handleNotFoundError('user'));
   const cfg = tenantRegistry.get(user.tenantId);
@@ -335,6 +343,7 @@ router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) 
       storeName: user.storeName,
       storeAddress: user.storeAddress,
       phoneNumber: user.phoneNumber,
+      storePhone: user.storePhone,
       patenteNumber: user.patenteNumber,
       rcNumber: user.rcNumber,
       npeNumber: user.npeNumber,
@@ -361,6 +370,7 @@ router.put('/update-profile', requireAuth, async (req: AuthenticatedRequest, res
     storeName,
     storeAddress,
     phoneNumber,
+    storePhone,
     patenteNumber,
     rcNumber,
     npeNumber,
@@ -377,6 +387,7 @@ router.put('/update-profile', requireAuth, async (req: AuthenticatedRequest, res
     storeName?: string;
     storeAddress?: string;
     phoneNumber?: string;
+    storePhone?: string;
     patenteNumber?: string;
     rcNumber?: string;
     npeNumber?: string;
@@ -390,6 +401,7 @@ router.put('/update-profile', requireAuth, async (req: AuthenticatedRequest, res
   if (storeName !== undefined) updateData.storeName = storeName;
   if (storeAddress !== undefined) updateData.storeAddress = storeAddress;
   if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+  if (storePhone !== undefined) updateData.storePhone = storePhone;
   if (patenteNumber !== undefined) updateData.patenteNumber = patenteNumber;
   if (rcNumber !== undefined) updateData.rcNumber = rcNumber;
   if (npeNumber !== undefined) updateData.npeNumber = npeNumber;
@@ -419,6 +431,7 @@ router.put('/update-profile', requireAuth, async (req: AuthenticatedRequest, res
     storeName: updatedUser.storeName,
     storeAddress: updatedUser.storeAddress,
     phoneNumber: updatedUser.phoneNumber,
+    storePhone: updatedUser.storePhone,
     patenteNumber: updatedUser.patenteNumber,
     rcNumber: updatedUser.rcNumber,
     npeNumber: updatedUser.npeNumber,
@@ -439,6 +452,7 @@ router.put('/update-profile', requireAuth, async (req: AuthenticatedRequest, res
       storeName: updatedUser.storeName,
       storeAddress: updatedUser.storeAddress,
       phoneNumber: updatedUser.phoneNumber,
+      storePhone: updatedUser.storePhone,
       patenteNumber: updatedUser.patenteNumber,
       rcNumber: updatedUser.rcNumber,
       npeNumber: updatedUser.npeNumber,

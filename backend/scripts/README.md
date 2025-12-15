@@ -66,18 +66,20 @@ npm run script:create-account -- \
 
 ```bash
 npm run script:create-account -- \
-  --tenant-id optique-vision \
-  --email contact@optique-vision.ma \
-  --password OptiqueVision2024! \
+  --tenant-id ichbilia-optique \
+  --email ichbilia-optique@gmail.com \
+  --password OptiqueIchbilia2025! \
   --client-type optician \
-  --first-name "Ahmed" \
-  --last-name "Bennani" \
-  --phone "+212600000000" \
-  --store-name "Optique Vision" \
-  --store-address "Bd Mohammed V, Casablanca" \
-  --patente "12345678" \
-  --rc "987654" \
-  --ice "001234567890123" \
+  --first-name "Hassan" \
+  --last-name "SGHOU" \
+  --phone "+212661374807" \
+  --phone-number "+212661374808" \
+  --store-name "Ichbilia Optique" \
+  --store-address "45 bis bloc -D- Hay Sahra, TanTan" \
+  --patente "2418056" \
+  --rc "5943" \
+  --npe "035031590" \
+  --ice "002933361000044" \
   --api-key dev-key-12345
 ```
 

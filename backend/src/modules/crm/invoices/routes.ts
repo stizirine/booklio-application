@@ -172,6 +172,16 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
     ...restData,
   };
 
+  // Attribuer un numéro de facture auto-incrémenté par tenant (1, 2, 3, ...)
+  const lastInvoice = await InvoiceModel.findOne({
+    tenantId: current.tenantId,
+  })
+    .sort({ invoiceNumber: -1 })
+    .select('invoiceNumber')
+    .lean();
+  const nextInvoiceNumber = (lastInvoice?.invoiceNumber as number | undefined) ?? 0;
+  invoicePayload.invoiceNumber = nextInvoiceNumber + 1;
+
   // Ajouter prescriptionSnapshot si fourni (convertir issuedAt en Date si présent)
   if (prescriptionSnapshot) {
     const snapshot: Record<string, unknown> = { ...prescriptionSnapshot };
@@ -263,6 +273,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
       _id: created._id,
       tenantId: created.tenantId,
       clientId: created.clientId,
+      invoiceNumber: created.invoiceNumber,
       totalAmount: created.totalAmount,
       advanceAmount: created.advanceAmount,
       creditAmount: created.creditAmount,
@@ -331,6 +342,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
       _id: inv._id,
       tenantId: inv.tenantId,
       clientId: inv.clientId,
+      invoiceNumber: inv.invoiceNumber,
       client: clientObj
         ? {
             _id: String(clientObj._id),
@@ -418,6 +430,7 @@ router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response)
       _id: inv._id,
       tenantId: inv.tenantId,
       clientId: inv.clientId,
+      invoiceNumber: inv.invoiceNumber,
       client: (() => {
         const client: unknown = inv.clientId as unknown;
         if (!includeClientFlag || !client || typeof client !== 'object') return undefined;
@@ -522,6 +535,7 @@ router.patch('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respons
       _id: updated._id,
       tenantId: updated.tenantId,
       clientId: updated.clientId,
+      invoiceNumber: updated.invoiceNumber,
       totalAmount: updated.totalAmount,
       advanceAmount: updated.advanceAmount,
       creditAmount: updated.creditAmount,
@@ -718,6 +732,7 @@ router.post('/:id/payments', requireAuth, async (req: AuthenticatedRequest, res:
       _id: invoice._id,
       tenantId: invoice.tenantId,
       clientId: invoice.clientId,
+      invoiceNumber: invoice.invoiceNumber,
       totalAmount: invoice.totalAmount,
       advanceAmount: invoice.advanceAmount,
       creditAmount: invoice.creditAmount,
