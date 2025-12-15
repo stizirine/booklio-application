@@ -4,10 +4,12 @@
  * et en appelant syncIndexes().
  *
  * Usage:
+ *   NODE_ENV=dev ./backend/scripts/init-db.ts
+ *   ou
  *   MONGO_URI="mongodb://..." ./backend/scripts/init-db.ts
  */
-import 'dotenv/config';
 import mongoose from 'mongoose';
+import './load-env.js';
 
 import { AppointmentModel } from '../src/modules/crm/appointments/model.js';
 import { ClientModel } from '../src/modules/crm/clients/model.js';

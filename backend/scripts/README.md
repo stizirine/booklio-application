@@ -2,6 +2,35 @@
 
 Ce dossier contient des scripts utilitaires pour la gestion de l'application Booklio.
 
+## 🔧 Chargement des variables d'environnement
+
+Tous les scripts utilisent le helper `load-env.ts` qui charge automatiquement les variables d'environnement depuis la **racine du projet** selon l'environnement.
+
+### Fichiers d'environnement
+
+Les fichiers `.env` se trouvent à la racine du projet :
+- `.env.dev` - Environnement de développement (par défaut)
+- `.env.prod` - Environnement de production
+- `.env.rec` - Environnement de recette
+- `.env` - Fallback général
+
+### Spécifier l'environnement
+
+Par défaut, les scripts chargent `.env.dev`. Pour utiliser un autre environnement :
+
+```bash
+# Développement (par défaut)
+npm run script:create-account -- -t mon-tenant -e test@test.com -p password123
+
+# Production
+NODE_ENV=prod npm run script:create-account -- -t mon-tenant -e test@test.com -p password123
+
+# Recette
+NODE_ENV=rec npm run script:init-db
+```
+
+---
+
 ## create-account.ts
 
 Script pour créer un compte utilisateur avec configuration complète du tenant **via l'API**.
@@ -279,4 +308,34 @@ Ce script :
 - `update-test-user-tenant.ts` : Mise à jour du tenant d'un utilisateur de test
 - `migrate-appointment-status.ts` : Migration du statut des rendez-vous
 - `migrate-appointment-notes.ts` : Migration des notes des rendez-vous
+
+---
+
+## 📝 Créer un nouveau script
+
+Pour créer un nouveau script qui charge automatiquement les bonnes variables d'environnement :
+
+1. Créer le fichier dans `backend/scripts/`
+2. Ajouter le shebang : `#!/usr/bin/env tsx`
+3. Importer le helper d'environnement : `import './load-env.js';`
+4. Le script chargera automatiquement les variables depuis la racine du projet
+
+Exemple :
+```typescript
+#!/usr/bin/env tsx
+import './load-env.js';
+import mongoose from 'mongoose';
+
+async function main() {
+  // Les variables d'environnement sont déjà chargées
+  console.log('MongoDB URI:', process.env.MONGO_URI?.substring(0, 30) + '...');
+  
+  await mongoose.connect(process.env.MONGO_URI!);
+  // Votre code ici...
+  
+  await mongoose.disconnect();
+}
+
+main().catch(console.error);
+```
 
