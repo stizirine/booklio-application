@@ -526,7 +526,11 @@
       "overdue": "En retard",
       "drafts": "Brouillons",
       "invoices": "factures"
-    }
+    },
+    "patenteNumber": "PATENTE",
+    "rcNumber": "R.C",
+    "npeNumber": "NPE",
+    "iceNumber": "ICE"
   }
   ,
   "optics": {
@@ -678,7 +682,7 @@
     "addStoreInfo": "Ajouter les informations du magasin",
     "roles": "Rôles",
     "patenteNumber": "Numéro de patente",
-    "rcNumber": "Registre de commerce (RC)",
+    "rcNumber": "R.C",
     "npeNumber": "NPE",
     "iceNumber": "ICE",
     "storeNamePlaceholder": "Nom ou raison sociale",

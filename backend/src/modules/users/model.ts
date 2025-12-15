@@ -12,7 +12,8 @@ export interface IUser extends Document {
   // Informations du magasin/entreprise
   storeName?: string; // Nom du magasin ou raison sociale
   storeAddress?: string; // Adresse du magasin
-  phoneNumber?: string; // Numéro de téléphone du magasin
+  phoneNumber?: string; // Numéro de téléphone du magasin (fixe)
+  storePhone?: string; // Autre téléphone du magasin (WhatsApp, mobile, etc.)
   patenteNumber?: string; // Numéro de patente
   rcNumber?: string; // Registre de commerce (RC)
   npeNumber?: string; // NPE
@@ -35,6 +36,7 @@ const UserSchema = new Schema<IUser>(
     storeName: { type: String, required: false, trim: true },
     storeAddress: { type: String, required: false, trim: true },
     phoneNumber: { type: String, required: false, trim: true },
+    storePhone: { type: String, required: false, trim: true },
     patenteNumber: { type: String, required: false, trim: true },
     rcNumber: { type: String, required: false, trim: true },
     npeNumber: { type: String, required: false, trim: true },

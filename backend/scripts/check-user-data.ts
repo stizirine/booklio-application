@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import mongoose from 'mongoose';
 
 import { User } from '../src/modules/users/model.js';
@@ -10,8 +11,8 @@ async function checkUserData() {
     await mongoose.connect(MONGO_URI);
     console.log('✅ Connecté à MongoDB\n');
 
-    // Récupérer le dernier utilisateur créé
-    const lastUser = await User.findOne({ email: /test_debug/ }).sort({ createdAt: -1 });
+    // Récupérer le dernier utilisateur de test créé (par email de test-storephone)
+    const lastUser = await User.findOne({ email: /test-storephone/ }).sort({ createdAt: -1 });
 
     if (lastUser) {
       console.log('👤 Dernier utilisateur de test trouvé:');
@@ -22,6 +23,8 @@ async function checkUserData() {
         roles: lastUser.roles,
         storeName: lastUser.storeName,
         storeAddress: lastUser.storeAddress,
+        phoneNumber: lastUser.phoneNumber,
+        storePhone: lastUser.storePhone,
         patenteNumber: lastUser.patenteNumber,
         rcNumber: lastUser.rcNumber,
         npeNumber: lastUser.npeNumber,

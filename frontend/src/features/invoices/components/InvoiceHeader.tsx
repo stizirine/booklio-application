@@ -1,3 +1,4 @@
+import Icon from '@src/assets/icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -39,19 +40,30 @@ const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
         <div>
           <h1 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-1 sm:mb-2 uppercase">{storeName}</h1>
           <div className="space-y-0.5 sm:space-y-1 text-xs sm:text-sm text-gray-700">
-            <p>{storeAddress}</p>
             <p>
-              <span className="font-medium">{t('invoices.phone', { defaultValue: 'Tél.' })}:</span> {phoneNumber}
+              <span className="inline-flex items-center">
+                <Icon name="location-marker" className="w-3 h-3 mr-1 text-gray-500" strokeWidth={2} />
+                {storeAddress}
+              </span>
             </p>
-            <div className="mt-2 sm:mt-3 text-[10px] sm:text-xs text-gray-600 space-y-0.5 sm:space-y-1">
+            <p>
+              <span className="font-medium inline-flex items-center">
+                <Icon name="phone" className="w-3 h-3 mr-1 text-gray-500" strokeWidth={2} />
+                {phoneNumber}
+              </span>
+            </p>
+            <div className="mt-2 sm:mt-3 text-[10px] sm:text-xs text-gray-700 font-bold space-y-0.5 sm:space-y-1">
               <p>
-                <span className="font-medium">{t('invoices.finessAm', { defaultValue: 'FINESS/AM' })}:</span> {npeNumber || '—'}
+                <span className="font-bold">{t('invoices.patenteNumber', { defaultValue: 'PATENTE' })}:</span> {_patenteNumber || '—'}
               </p>
               <p>
-                <span className="font-medium">{t('profile.npeNumber', { defaultValue: 'N°Siren / Siret' })}:</span> {rcNumber || '—'}
+                <span className="font-bold">{t('invoices.rcNumber', { defaultValue: 'R.C' })}:</span> {rcNumber || '—'}
               </p>
               <p>
-                <span className="font-medium">{t('profile.iceNumber', { defaultValue: 'TVA Intracommunautaire' })}:</span> {iceNumber || '—'}
+                <span className="font-bold">{t('invoices.npeNumber', { defaultValue: 'NPE' })}:</span> {npeNumber || '—'}
+              </p>
+              <p>
+                <span className="font-bold">{t('invoices.iceNumber', { defaultValue: 'ICE' })}:</span> {iceNumber || '—'}
               </p>
             </div>
           </div>
