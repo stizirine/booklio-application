@@ -40,6 +40,8 @@ program
   .option('--rc <rcNumber>', 'Numéro RC')
   .option('--npe <npeNumber>', 'Numéro NPE')
   .option('--ice <iceNumber>', 'Numéro ICE')
+  .option('--api-url <url>', 'URL de l\'API pour recharger le registre', 'http://localhost:4000')
+  .option('--api-key <key>', 'API Key pour l\'API', process.env.REQUIRED_HEADER_VALUE || '')
   .parse();
 
 async function createAccountDirect() {
@@ -61,7 +63,11 @@ async function createAccountDirect() {
       rc: rcNumber,
       npe: npeNumber,
       ice: iceNumber,
+      apiUrl,
+      apiKey,
     } = options as any;
+    
+    let tenantCreated = false;
 
     console.log('🔌 Connexion à MongoDB...\n');
     
@@ -95,6 +101,8 @@ async function createAccountDirect() {
         capabilities,
         featureFlags,
       });
+      
+      tenantCreated = true;
       
       console.log(`✅ Tenant créé:`, {
         tenantId: tenant.tenantId,
@@ -156,7 +164,40 @@ async function createAccountDirect() {
     }
 
     await mongoose.disconnect();
-    console.log(`\n✅ Déconnexion de MongoDB\n`);
+    console.log(`\n✅ Déconnexion de MongoDB`);
+    
+    // Recharger le registre des tenants si un nouveau tenant a été créé
+    if (tenantCreated && apiUrl) {
+      console.log(`\n🔄 Rechargement du registre des tenants...`);
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        
+        if (apiKey) {
+          headers['x-api-key'] = apiKey;
+        }
+        
+        const response = await fetch(`${apiUrl}/v1/tenants/reload`, {
+          method: 'POST',
+          headers,
+        } as any);
+        
+        if (response.ok) {
+          console.log(`✅ Registre rechargé avec succès! Le tenant est maintenant disponible dans l'API.`);
+        } else {
+          console.log(`⚠️  Échec du rechargement automatique (${response.status})`);
+          console.log(`   Vous pouvez recharger manuellement avec: curl -X POST ${apiUrl}/v1/tenants/reload`);
+          console.log(`   Ou redémarrer le backend: docker restart booklio-api`);
+        }
+      } catch (error: any) {
+        console.log(`⚠️  Impossible de recharger automatiquement le registre`);
+        console.log(`   Raison: ${error.message}`);
+        console.log(`   Vous devez redémarrer le backend: docker restart booklio-api`);
+      }
+    }
+    
+    console.log();
     
   } catch (error: any) {
     console.error('\n❌ Erreur lors de la création du compte:', error.message);
