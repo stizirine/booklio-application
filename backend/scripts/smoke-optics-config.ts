@@ -1,4 +1,6 @@
 #!/usr/bin/env tsx
+import './load-env.js';
+
 const BASE = process.env.BASE_URL || 'http://localhost:4000';
 const email = process.env.SMOKE_EMAIL || 'ichbilia-optique@gmail.com';
 const password = process.env.SMOKE_PASSWORD || 'OptiqueIchbilia2025!';

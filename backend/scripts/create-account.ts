@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import { program } from 'commander';
-import 'dotenv/config.js';
+import './load-env.js';
 
 // Configuration du CLI
 program
