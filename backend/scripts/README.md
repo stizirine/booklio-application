@@ -36,6 +36,8 @@ NODE_ENV=rec npm run script:init-db
 Script pour créer un compte utilisateur avec configuration complète du tenant **via l'API**.
 
 > ⚠️ **Important**: Ce script utilise l'API de registration (`/v1/auth/register`). L'API doit être accessible et en cours d'exécution.
+> 
+> **Note**: En production, l'endpoint `/register` est désactivé. Utilisez `create-account-direct.ts` à la place.
 
 ### Prérequis
 
@@ -229,6 +231,145 @@ Le script est déjà configuré dans `backend/package.json` :
     "script:create-account": "tsx scripts/create-account.ts"
   }
 }
+```
+
+## create-account-direct.ts
+
+Script pour créer un compte utilisateur **directement dans MongoDB** (bypass de l'API).
+
+> ⚠️ **Usage en production**: Ce script est conçu pour être utilisé en production où l'endpoint `/v1/auth/register` est désactivé pour des raisons de sécurité.
+
+### Prérequis
+
+- Accès à MongoDB (via `MONGO_URI`)
+- Aucune API n'est requise (le script écrit directement dans la base)
+
+### Usage de base
+
+```bash
+# Compte optician basique
+npm run script:create-account-direct -- \
+  --tenant-id mon-opticien \
+  --email contact@mon-opticien.fr \
+  --password MonMotDePasse123
+
+# En production avec MONGO_URI
+NODE_ENV=prod MONGO_URI="mongodb://user:pass@localhost:27017/booklio?authSource=admin" \
+  npm run script:create-account-direct -- \
+  --tenant-id ichbilia-optique \
+  --email contact@ichbilia-optique.ma \
+  --password SecurePassword123! \
+  --store-name "Ichbilia Optique" \
+  --first-name "Hassan" \
+  --last-name "SGHOU"
+```
+
+### Options disponibles
+
+#### Options obligatoires
+- `-t, --tenant-id <tenantId>` : Identifiant unique du tenant
+- `-e, --email <email>` : Email de l'utilisateur
+- `-p, --password <password>` : Mot de passe (sera hashé avec bcrypt)
+
+#### Options de configuration
+- `-c, --client-type <type>` : Type de client (optician, generic) [défaut: optician]
+
+#### Options utilisateur
+- `--first-name <firstName>` : Prénom
+- `--last-name <lastName>` : Nom de famille
+- `--phone <phone>` : Numéro de téléphone personnel
+- `--store-name <storeName>` : Nom du magasin
+- `--store-address <storeAddress>` : Adresse du magasin
+- `--phone-number <phoneNumber>` : Numéro de téléphone fixe du magasin
+- `--store-phone <storePhone>` : Autre téléphone du magasin
+- `--patente <patenteNumber>` : Numéro de patente
+- `--rc <rcNumber>` : Numéro RC
+- `--npe <npeNumber>` : Numéro NPE
+- `--ice <iceNumber>` : Numéro ICE
+
+### Exemple complet (production)
+
+```bash
+NODE_ENV=prod npm run script:create-account-direct -- \
+  --tenant-id ichbilia-optique \
+  --email ichbilia-optique@gmail.com \
+  --password OptiqueIchbilia2025! \
+  --client-type optician \
+  --first-name "Hassan" \
+  --last-name "SGHOU" \
+  --phone "+212661374807" \
+  --phone-number "+212661374808" \
+  --store-name "Ichbilia Optique" \
+  --store-address "45 bis bloc -D- Hay Sahra, TanTan" \
+  --patente "2418056" \
+  --rc "5943" \
+  --npe "035031590" \
+  --ice "002933361000044"
+```
+
+### Sortie exemple
+
+```
+🔌 Connexion à MongoDB...
+
+✅ Connecté à MongoDB
+
+📦 Création du tenant "ichbilia-optique"...
+✅ Tenant créé: {
+  tenantId: 'ichbilia-optique',
+  clientType: 'optician',
+  capabilities: [ 'dashboard', 'clients', 'appointments', 'invoices', 'optics' ]
+}
+
+🔐 Hashage du mot de passe...
+👤 Création de l'utilisateur "ichbilia-optique@gmail.com"...
+
+✅ Utilisateur créé avec succès!
+   ID: 507f1f77bcf86cd799439011
+   Email: ichbilia-optique@gmail.com
+   Tenant: ichbilia-optique
+   Type: optician
+   Magasin: Ichbilia Optique
+
+✅ Déconnexion de MongoDB
+```
+
+### Avantages
+
+✅ **Fonctionne en production** - Bypass l'API désactivée
+✅ **Création du tenant** - Crée automatiquement le tenant s'il n'existe pas
+✅ **Hash sécurisé** - Utilise bcrypt avec salt de 10 rounds
+✅ **Pas d'API requise** - Écrit directement dans MongoDB
+✅ **Vérification des doublons** - Vérifie si l'email existe déjà
+
+### Différences avec create-account.ts
+
+| Caractéristique | create-account.ts | create-account-direct.ts |
+|-----------------|-------------------|-------------------------|
+| **Utilise l'API** | ✅ Oui | ❌ Non (direct MongoDB) |
+| **Fonctionne en prod** | ❌ Non (endpoint désactivé) | ✅ Oui |
+| **Nécessite API lancée** | ✅ Oui | ❌ Non |
+| **Nécessite MONGO_URI** | ❌ Non | ✅ Oui |
+| **Validation API** | ✅ Complète | ⚠️ Minimale |
+| **Registre à jour** | ✅ Immédiat | ⚠️ Nécessite redémarrage API |
+
+### Notes importantes
+
+1. **Production uniquement** : Préférez `create-account.ts` en développement
+2. **Redémarrage requis** : L'API doit être redémarrée pour charger le nouveau tenant depuis MongoDB
+3. **Mot de passe** : Le script hashe le mot de passe avec bcrypt (10 rounds)
+4. **Tenant automatique** : Crée le tenant avec les bonnes capabilities selon le `clientType`
+5. **Rôle user** : Les utilisateurs créés ont le rôle `user` (pas `admin`)
+
+### Configuration MongoDB en production
+
+Sur le serveur de production, assurez-vous que `MONGO_URI` dans `/var/www/booklio/.env` pointe vers MongoDB accessible depuis l'extérieur de Docker :
+
+```bash
+# Si MongoDB tourne dans Docker sur le même serveur
+MONGO_URI=mongodb://booklio:password@localhost:27017/booklio?authSource=admin
+
+# Remplacez 'password' par le mot de passe réel encodé (%40 pour @)
 ```
 
 ## migrate-invoice-items.ts
