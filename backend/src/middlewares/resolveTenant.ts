@@ -36,6 +36,11 @@ export function resolveTenant(req: Request, _res: Response, next: NextFunction) 
 
 export function requireModule(moduleId: Capability) {
   return (req: Request, res: Response, next: NextFunction) => {
+    // Si resolveTenant n'a pas encore été appelé, l'appeler maintenant
+    if (!req.tenant) {
+      resolveTenant(req, res, () => {});
+    }
+    
     const caps = req.tenant?.capabilities || [];
     if (!caps.includes(moduleId)) return res.status(403).json({ error: 'module_forbidden' });
     return next();
