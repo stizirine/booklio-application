@@ -1,5 +1,6 @@
 import express from 'express';
 
+import { tenantRegistry } from './registry.js';
 import type { TenantInfoResponse } from './types.js';
 
 export const router = express.Router();
@@ -20,4 +21,21 @@ router.get('/:id/capabilities', (req, res) => {
   if (!req.tenant || req.tenant.tenantId !== id)
     return res.status(404).json({ error: 'tenant_not_found' });
   return res.json({ tenantId: id, capabilities: req.tenant.capabilities });
+});
+
+// Endpoint pour recharger le registre des tenants depuis MongoDB
+// Utile après création d'un nouveau tenant sans redémarrer le serveur
+router.post('/reload', async (req, res) => {
+  try {
+    await tenantRegistry.load();
+    return res.json({ 
+      success: true, 
+      message: 'Tenant registry reloaded successfully' 
+    });
+  } catch (error: any) {
+    return res.status(500).json({ 
+      error: 'reload_failed', 
+      message: error.message 
+    });
+  }
 });

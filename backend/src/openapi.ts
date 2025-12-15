@@ -631,6 +631,48 @@ export const openapiSpec: OpenAPIV3.Document = {
         },
       },
     },
+    '/v1/tenants/reload': {
+      post: {
+        summary: 'Recharger le registre des tenants depuis MongoDB',
+        description: 'Recharge tous les tenants depuis MongoDB sans redémarrer le serveur. Utile après création d\'un nouveau tenant.',
+        tags: ['tenants'],
+        security: [{ apiKey: [] }],
+        responses: {
+          '200': {
+            description: 'Registre rechargé avec succès',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { 
+                      type: 'string', 
+                      example: 'Tenant registry reloaded successfully' 
+                    },
+                  },
+                  required: ['success', 'message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Erreur lors du rechargement',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string', example: 'reload_failed' },
+                    message: { type: 'string', example: 'Connection to MongoDB failed' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     '/metrics': {
       get: {
         summary: 'Exposer les métriques Prometheus',
