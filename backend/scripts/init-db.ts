@@ -8,8 +8,8 @@
  *   ou
  *   MONGO_URI="mongodb://..." ./backend/scripts/init-db.ts
  */
-import './load-env.js';
 import mongoose from 'mongoose';
+import './load-env.js';
 
 import { AppointmentModel } from '../src/modules/crm/appointments/model.js';
 import { ClientModel } from '../src/modules/crm/clients/model.js';
