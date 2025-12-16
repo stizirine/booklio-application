@@ -4,7 +4,9 @@ import { mockApi } from './mockApi';
 // Fonction utilitaire pour récupérer les variables d'environnement
 const getEnvConfig = () => {
   // Valeur partagée (injectée via REACT_APP_* au build)
-  const getHeaderValue = (): string | undefined => process.env.REQUIRED_HEADER_VALUE;
+  // En production, seule REACT_APP_* est disponible dans le bundle
+  const getHeaderValue = (): string | undefined =>
+    process.env.REACT_APP_REQUIRED_HEADER_VALUE;
   
   const config = {
     // Configuration de l'API
@@ -30,7 +32,7 @@ const getEnvConfig = () => {
     DEBUG_MODE: process.env.REACT_APP_DEBUG_MODE === 'true' || process.env.NODE_ENV === 'development',
     
     // Configuration des headers API
-    REQUIRED_HEADER_NAME: process.env.REACT_APP_X_API_KEY || 'x-api-key',
+    REQUIRED_HEADER_NAME: process.env.REACT_APP_REQUIRED_HEADER_NAME || 'x-api-key',
     REQUIRED_HEADER_VALUE: getHeaderValue()
   };
   
@@ -58,8 +60,8 @@ if (envConfig.DEBUG_MODE) {
       REACT_APP_DEFAULT_PASSWORD: process.env.REACT_APP_DEFAULT_PASSWORD,
       REACT_APP_REQUEST_TIMEOUT: process.env.REACT_APP_REQUEST_TIMEOUT,
       REACT_APP_DEBUG_MODE: process.env.REACT_APP_DEBUG_MODE,
-      REACT_APP_X_API_KEY: process.env.REACT_APP_X_API_KEY,
-      REQUIRED_HEADER_VALUE: process.env.REQUIRED_HEADER_VALUE
+      REACT_APP_REQUIRED_HEADER_NAME: process.env.REACT_APP_REQUIRED_HEADER_NAME,
+      REACT_APP_REQUIRED_HEADER_VALUE: process.env.REACT_APP_REQUIRED_HEADER_VALUE
     },
     'Configuration finale': envConfig
   });
