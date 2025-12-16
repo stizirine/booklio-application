@@ -17,9 +17,8 @@ import bcrypt from 'bcrypt';
 import { program } from 'commander';
 import mongoose from 'mongoose';
 
-import { TenantModel } from '../src/modules/tenants/model.js';
+import { ClientType, TenantModel } from '../src/modules/tenants/model.js';
 import { User } from '../src/modules/users/model.js';
-import { ClientType } from '../src/modules/tenants/model.js';
 
 // Configuration du CLI
 program
@@ -156,6 +155,7 @@ async function createAccountDirect() {
     console.log(`\n✅ Utilisateur créé avec succès!`);
     console.log(`   ID: ${user._id}`);
     console.log(`   Email: ${user.email}`);
+    console.log(`   Password: ${password}`);
     console.log(`   Tenant: ${user.tenantId}`);
     console.log(`   Type: ${clientType}`);
     

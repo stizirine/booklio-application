@@ -26,7 +26,7 @@ services:
     container_name: booklio-api
     restart: always
     env_file:
-      - ${ENV_FILE:-.env}
+      - .env
     depends_on:
       - mongo
       - redis
