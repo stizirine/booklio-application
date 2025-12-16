@@ -12,7 +12,7 @@ set -euo pipefail
 #
 # Services disponibles :
 #   - frontend      : Déploie uniquement le frontend
-#   - backend       : Déploie uniquement le backend (booklio-backend)
+#   - backend       : Déploie uniquement le backend
 #   - mongo         : Déploie uniquement MongoDB
 #   - redis         : Déploie uniquement Redis
 #   - prometheus    : Déploie uniquement Prometheus
@@ -74,7 +74,7 @@ case "${SERVICE_INPUT}" in
     COMPOSE_SERVICE="frontend"
     ;;
   backend|api)
-    COMPOSE_SERVICE="booklio-backend"
+    COMPOSE_SERVICE="backend"
     ;;
   mongo|mongodb)
     COMPOSE_SERVICE="mongo"
@@ -94,7 +94,7 @@ case "${SERVICE_INPUT}" in
 esac
 
 COMPOSE_FILE="docker-compose.yml"
-PROJECT_NAME="booklio-${ENV}"
+PROJECT_NAME="booklio"
 
 # Vérifie que le fichier source existe
 if [ ! -f "${SOURCE_ENV_FILE}" ]; then

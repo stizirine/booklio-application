@@ -42,3 +42,10 @@ if (envFile !== '.env') {
   dotenv.config({ path: path.join(projectRoot, '.env'), override: false });
 }
 
+// Charger .env.local en dernière priorité (surcharge les autres)
+const envLocalPath = path.join(projectRoot, '.env.local');
+const localResult = dotenv.config({ path: envLocalPath, override: true });
+if (!localResult.error) {
+  console.log(`✓ Variables locales chargées depuis .env.local`);
+}
+
