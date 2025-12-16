@@ -12,7 +12,7 @@ set -euo pipefail
 #
 # Services disponibles :
 #   - frontend      : Déploie uniquement le frontend
-#   - backend       : Déploie uniquement le backend (booklio-backend)
+#   - backend       : Déploie uniquement le backend
 #   - mongo         : Déploie uniquement MongoDB
 #   - redis         : Déploie uniquement Redis
 #   - prometheus    : Déploie uniquement Prometheus
@@ -27,6 +27,9 @@ set -euo pipefail
 # Prérequis :
 #   - docker compose disponible (v2+)
 #   - fichiers .env.dev / .env.rec / .env.prod présents à la racine
+#
+# Le script copie automatiquement le fichier d'environnement approprié vers .env
+# avant de lancer le déploiement avec docker-compose
 
 # Parse les arguments
 SERVICE_INPUT="${1:-all}"
@@ -40,19 +43,19 @@ case "${SERVICE_INPUT}" in
     ;;
 esac
 
-# Détermine l'environnement
+# Détermine l'environnement et le fichier source
 case "${ENV_INPUT}" in
   dev|development)
     ENV=dev
-    ENV_FILE=".env.dev"
+    SOURCE_ENV_FILE=".env.dev"
     ;;
   rec|recette|staging)
     ENV=rec
-    ENV_FILE=".env.rec"
+    SOURCE_ENV_FILE=".env.rec"
     ;;
   prod|production)
     ENV=prod
-    ENV_FILE=".env.prod"
+    SOURCE_ENV_FILE=".env.prod"
     ;;
   *)
     echo "❌ Environnement invalide: ${ENV_INPUT}"
@@ -62,13 +65,16 @@ case "${ENV_INPUT}" in
     ;;
 esac
 
+# Fichier .env cible (toujours le même)
+ENV_FILE=".env"
+
 # Mappe le nom du service au nom dans docker-compose
 case "${SERVICE_INPUT}" in
   frontend)
     COMPOSE_SERVICE="frontend"
     ;;
   backend|api)
-    COMPOSE_SERVICE="booklio-backend"
+    COMPOSE_SERVICE="backend"
     ;;
   mongo|mongodb)
     COMPOSE_SERVICE="mongo"
@@ -88,20 +94,25 @@ case "${SERVICE_INPUT}" in
 esac
 
 COMPOSE_FILE="docker-compose.yml"
-PROJECT_NAME="booklio-${ENV}"
+PROJECT_NAME="booklio"
 
-if [ ! -f "${ENV_FILE}" ]; then
-  echo "❌ Fichier d'environnement manquant: ${ENV_FILE}"
-  echo "   Crée-le à partir de ${ENV_FILE}.example"
+# Vérifie que le fichier source existe
+if [ ! -f "${SOURCE_ENV_FILE}" ]; then
+  echo "❌ Fichier d'environnement manquant: ${SOURCE_ENV_FILE}"
+  echo "   Crée-le à partir de env.${ENV}.example"
   exit 1
 fi
 
+# Copie le fichier source vers .env
+echo "📋 Copie ${SOURCE_ENV_FILE} → ${ENV_FILE}"
+cp "${SOURCE_ENV_FILE}" "${ENV_FILE}"
+
 if [ -n "${COMPOSE_SERVICE}" ]; then
   echo "🚀 Déploiement ${ENV}: service '${COMPOSE_SERVICE}'"
-  echo "   Fichier: ${COMPOSE_FILE}, env=${ENV_FILE}, projet=${PROJECT_NAME}"
+  echo "   Fichier: ${COMPOSE_FILE}, projet=${PROJECT_NAME}"
 else
   echo "🚀 Déploiement ${ENV}: tous les services"
-  echo "   Fichier: ${COMPOSE_FILE}, env=${ENV_FILE}, projet=${PROJECT_NAME}"
+  echo "   Fichier: ${COMPOSE_FILE}, projet=${PROJECT_NAME}"
 fi
 
 # Pull optionnel (ignore les erreurs pour permettre le build local)
