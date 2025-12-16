@@ -121,10 +121,21 @@ else
   else
     # Démarrage de tous les services sans exception
     echo "▶️  Démarrage de tous les services..."
-    docker compose --env-file "${ENV_FILE}" -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" start
-    echo "✅ Tous les services démarrés"
+
+    # Liste de tous les services possibles
+    ALL_SERVICES=("frontend" "backend" "mongo" "redis" "prometheus" "grafana")
+
+    for service in "${ALL_SERVICES[@]}"; do
+      # Vérifier si le conteneur existe
+      if docker compose --env-file "${ENV_FILE}" -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" ps -a -q "${service}" 2>/dev/null | grep -q .; then
+        echo "   → Démarrage de '${service}'..."
+        docker compose --env-file "${ENV_FILE}" -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" start "${service}"
+      fi
+    done
+
+    echo "✅ Services démarrés"
   fi
-  
+
   # Affiche l'état final
   echo ""
   docker compose --env-file "${ENV_FILE}" -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" ps
