@@ -16,7 +16,7 @@ export interface EyeMeasurementSetDoc {
   nextRenewalAt?: Date | null;
   notes?: string | null;
   observation?: string | null;
-  pd?: number | null; // Pupillary distance
+  ep?: number | null; // Eye distance
   od: EyeValues; // Oeil droit
   og: EyeValues; // Oeil gauche
   createdAt: Date;
@@ -48,7 +48,7 @@ const schema = new Schema<EyeMeasurementSetDoc>(
     nextRenewalAt: { type: Date, required: false, default: null },
     notes: { type: String, required: false, default: null },
     observation: { type: String, required: false, default: null },
-    pd: { type: Number, required: false, default: null, min: 40, max: 80 },
+    ep: { type: Number, required: false, default: null, min: 40, max: 80 },
     od: { type: eyeValues, required: true },
     og: { type: eyeValues, required: true },
   },

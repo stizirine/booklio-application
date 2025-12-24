@@ -61,8 +61,8 @@ export const useOpticsStore = create<OpticsStore>()(
           cylinderLeft: r.correction?.og?.cylinder?.toString?.() ?? undefined,
           axisRight: r.correction?.od?.axis?.toString?.() ?? undefined,
           axisLeft: r.correction?.og?.axis?.toString?.() ?? undefined,
-          pd: r.glassesParams?.pd,
-          notes: r.notes,
+          ep: r.glassesParams?.ep,
+          add: r.add,
           lensType: r.glassesParams?.lensType,
           index: r.glassesParams?.index,
           treatments: r.glassesParams?.treatments || [],
@@ -122,8 +122,6 @@ export const useOpticsStore = create<OpticsStore>()(
       set({ loading: true, error: null });
       try {
         const rec = await getOpticsRecord(id);
-        console.log('🚀 ~ rec:', rec);  
-        console.log('🚀 ~ rec as OpticsRecord:', rec as OpticsRecord); 
         set({ loading: false });
         return rec as OpticsRecord;
       } catch (e: any) {

@@ -42,7 +42,7 @@ const createSchema = z.object({
     .optional(),
   notes: z.string().nullable().optional(),
   observation: z.string().nullable().optional(),
-  pd: z.number().min(40).max(80).nullable().optional(),
+  ep: z.number().min(40).max(80).nullable().optional(),
   od: EyeValuesSchema,
   og: EyeValuesSchema,
 });

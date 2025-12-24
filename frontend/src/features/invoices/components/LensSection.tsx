@@ -36,16 +36,16 @@ const EYE_FIELDS = [
 ] as const;
 
 // Fonctions utilitaires pour le PD
-const formatPDValue = (pd: LensData['pd']): string => {
-  if (typeof pd === 'string') return pd;
-  if (typeof pd === 'number') return pd.toString();
-  if (typeof pd === 'object' && pd !== null && 'mono' in pd) {
-    return `${pd.mono.od}/${pd.mono.og}${pd.near ? ` + ${pd.near}` : ''}`;
+const formatEPValue = (ep: LensData['ep']): string => {
+  if (typeof ep === 'string') return ep;
+  if (typeof ep === 'number') return ep.toString();
+  if (typeof ep === 'object' && ep !== null && 'mono' in ep) {
+    return `${ep.mono.od}/${ep.mono.og}${ep.near ? ` + ${ep.near}` : ''}`;
   }
   return '';
 };
 
-const parsePDValue = (value: string): string | number | { mono: { od: number; og: number }; near?: number } => {
+const parseEPValue = (value: string): string | number | { mono: { od: number; og: number }; near?: number } => {
   const trimmed = value.trim();
   
   // Format numérique simple : "62"
@@ -145,10 +145,10 @@ const LensSection: React.FC<LensSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   
-  const pdValue = useMemo(() => formatPDValue(lensData.pd), [lensData.pd]);
+  const epValue = useMemo(() => formatEPValue(lensData.ep), [lensData.ep]);
   
-  const handlePDChange = (value: string) => {
-    onLensChange('pd', parsePDValue(value));
+  const handleEPChange = (value: string) => {
+    onLensChange('ep', parseEPValue(value));
   };
 
   return (
@@ -228,12 +228,12 @@ const LensSection: React.FC<LensSectionProps> = ({
 
           {/* PD */}
           <div className="mt-4">
-            <Field label={t('invoices.pupillaryDistance', { defaultValue: 'Distance pupillaire (PD)' })} htmlFor="lens-pd">
+            <Field label={t('invoices.eyeDistance', { defaultValue: 'Distance interpupillaire (EP)' })} htmlFor="lens-ep">
               <Input
-                id="lens-pd"
+                id="lens-ep"
                 type="text"
-                value={pdValue}
-                onChange={(e) => handlePDChange(e.target.value)}
+                value={epValue}
+                onChange={(e) => handleEPChange(e.target.value)}
                 className="w-48"
                 placeholder={t('invoices.pdPlaceholder', { defaultValue: '62 ou 32/30 +2' }) as string}
               />

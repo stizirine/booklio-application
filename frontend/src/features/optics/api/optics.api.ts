@@ -39,8 +39,8 @@ export type OpticsRecordPayload = {
   prismRightBase?: PrismBase | string;
   prismLeftValue?: string | number;
   prismLeftBase?: PrismBase | string;
-  pd?: string | number;
-  notes?: string;
+  ep?: string | number;
+  add?: string;
   // paramètres lunettes (UI à venir – valeurs par défaut si non saisis)
   lensType?: LensType | string;
   index?: string;
@@ -115,7 +115,7 @@ const toBackendPrescriptionPayload = (p: OpticsRecordPayload) => {
       lensType: (p.lensType as LensType) || LensType.SingleVision,
       index: p.index || '1.50',
       treatments: p.treatments || [],
-      pd: n(p.pd) ?? 0,
+      ep: n(p.ep) ?? 0,
       segmentHeight: n(p.segmentHeight) ?? 0,
       vertexDistance: n(p.vertexDistance) ?? 0,
       baseCurve: n(p.baseCurve) ?? 0,
@@ -167,7 +167,7 @@ const toBackendPrescriptionPayload = (p: OpticsRecordPayload) => {
       : {}),
     issuedAt: p.issuedAt || now.toISOString(),
     expiresAt: p.expiresAt || oneYear.toISOString(),
-    notes: p.notes || '',
+    add: p.add || '',
     source: p.source || 'manual',
   };
 };
@@ -184,7 +184,7 @@ const toBackendPrescriptionPatch = (p: Partial<OpticsRecordPayload>) => {
   };
 
   if (p.kind !== undefined) body.kind = p.kind;
-  if (p.notes !== undefined) body.notes = p.notes;
+  if (p.add !== undefined) body.add = p.add;
   if (p.issuedAt !== undefined) body.issuedAt = p.issuedAt;
   if (p.expiresAt !== undefined) body.expiresAt = p.expiresAt;
   if (p.source !== undefined) body.source = p.source;
@@ -233,7 +233,7 @@ const toBackendPrescriptionPatch = (p: Partial<OpticsRecordPayload>) => {
   if (p.lensType !== undefined) gp.lensType = p.lensType;
   if (p.index !== undefined) gp.index = p.index;
   if (p.treatments !== undefined) gp.treatments = p.treatments;
-  { const v = n(p.pd); if (p.pd !== undefined && v !== undefined) gp.pd = v; }
+  { const v = n(p.ep); if (p.ep !== undefined && v !== undefined) gp.ep = v; }
   { const v = n(p.segmentHeight); if (p.segmentHeight !== undefined && v !== undefined) gp.segmentHeight = v; }
   { const v = n(p.vertexDistance); if (p.vertexDistance !== undefined && v !== undefined) gp.vertexDistance = v; }
   { const v = n(p.baseCurve); if (p.baseCurve !== undefined && v !== undefined) gp.baseCurve = v; }
@@ -306,7 +306,6 @@ export async function updateOpticsRecord(id: string, payload: Partial<OpticsReco
 
 export async function getOpticsRecord(id: string) {
   const { data } = await api.get(`/v1/optician/prescriptions/${id}`);
-  console.log('🚀 ~ data:', data);
   return data;
 }
 

@@ -2,7 +2,7 @@ import VirtualizedList from '@components/VirtualizedList';
 import { Button } from '@components/ui';
 import React from 'react';
 import { OpticsRecord } from '../types';
-import { formatPd } from '../utils';
+import { formatEp } from '../utils';
 
 interface OpticsHistoryProps {
   records: OpticsRecord[];
@@ -57,7 +57,7 @@ export const OpticsHistory: React.FC<OpticsHistoryProps> = ({
                   {t(historyLineTemplate, { 
                     od: r.sphereRight || '—', 
                     og: r.sphereLeft || '—', 
-                    pd: r.pd ? `· PD ${formatPd(r.pd as any)}` : '' 
+                    ep: r.ep ? `· EP ${formatEp(r.ep as any)}` : '' 
                   })}
                 </div>
               </div>

@@ -27,7 +27,7 @@ export interface LensData {
     axis: string;
     add: string;
   };
-  pd: number | { mono: { od: number; og: number }; near?: number } | string;
+  ep: number | { mono: { od: number; og: number }; near?: number } | string;
   price: number;
   rightEyePrice: number;
   leftEyePrice: number;
@@ -44,7 +44,7 @@ export interface UseOpticsInvoiceEditorProps {
     brand?: string;
     rightEye?: Partial<LensData['rightEye']>;
     leftEye?: Partial<LensData['leftEye']>;
-    pd?: LensData['pd'];
+    ep?: LensData['ep'];
     price?: number;
     rightEyePrice?: number;
     leftEyePrice?: number;
@@ -162,8 +162,8 @@ function extractDataFromInvoiceItems(invoice: Invoice | null | undefined): {
             add: String(ld.leftEye.add || ''),
           };
         }
-        if (ld.pd !== undefined) {
-          lensData.pd = ld.pd;
+        if (ld.ep !== undefined) {
+          lensData.ep = ld.ep;
         }
       }
     }
@@ -196,7 +196,7 @@ function extractDataFromInvoiceItems(invoice: Invoice | null | undefined): {
 
   // Extraire les données de correction depuis les notes
   if (invoice.notes) {
-    const notesMatch = invoice.notes.match(/OD\s+([-\d.]+)\s+([-\d.]+)?\s+(\d+)(?:\s+([-\d.]+))?\s*\/\s*OG\s+([-\d.]+)\s+([-\d.]+)?\s+(\d+)(?:\s+([-\d.]+))?\s*-\s*PD:\s*(.+)/i);
+    const notesMatch = invoice.notes.match(/OD\s+([-\d.]+)\s+([-\d.]+)?\s+(\d+)(?:\s+([-\d.]+))?\s*\/\s*OG\s+([-\d.]+)\s+([-\d.]+)?\s+(\d+)(?:\s+([-\d.]+))?\s*-\s*EP:\s*(.+)/i);
     if (notesMatch) {
       lensData.rightEye = {
         sphere: notesMatch[1] || '',
@@ -210,12 +210,12 @@ function extractDataFromInvoiceItems(invoice: Invoice | null | undefined): {
         axis: notesMatch[7] || '',
         add: notesMatch[8] || '',
       };
-      const pdStr = notesMatch[9]?.trim();
-      if (pdStr) {
-        // Parser PD (peut être un nombre ou "mono: od/og + near")
-        const monoMatch = pdStr.match(/mono:\s*([\d.]+)\/([\d.]+)(?:\s*\+\s*([\d.]+))?/i);
+      const epStr = notesMatch[9]?.trim();
+      if (epStr) {
+        // Parser EP (peut être un nombre ou "mono: od/og + near")
+        const monoMatch = epStr.match(/mono:\s*([\d.]+)\/([\d.]+)(?:\s*\+\s*([\d.]+))?/i);
         if (monoMatch) {
-          lensData.pd = {
+          lensData.ep = {
             mono: {
               od: parseFloat(monoMatch[1]),
               og: parseFloat(monoMatch[2]),
@@ -223,9 +223,9 @@ function extractDataFromInvoiceItems(invoice: Invoice | null | undefined): {
             near: monoMatch[3] ? parseFloat(monoMatch[3]) : undefined,
           };
         } else {
-          const pdNum = parseFloat(pdStr);
-          if (!isNaN(pdNum)) {
-            lensData.pd = pdNum;
+          const epNum = parseFloat(epStr);
+          if (!isNaN(epNum)) {
+            lensData.ep = epNum;
           }
         }
       }
@@ -294,7 +294,7 @@ export function useOpticsInvoiceEditor({
       axis: '',
       add: ''
     }),
-    pd: invoiceLensData.pd !== undefined ? invoiceLensData.pd : (initialLensData?.pd !== undefined ? initialLensData.pd : ('' as string | number | { mono: { od: number; og: number }; near?: number })),
+    ep: invoiceLensData.ep !== undefined ? invoiceLensData.ep : (initialLensData?.ep !== undefined ? initialLensData.ep : ('' as string | number | { mono: { od: number; og: number }; near?: number })),
     price: typeof invoiceLensData.price === 'number' ? invoiceLensData.price : (typeof initialLensData?.price === 'number' ? initialLensData.price : 0),
     rightEyePrice: typeof invoiceLensData.rightEyePrice === 'number' ? invoiceLensData.rightEyePrice : (typeof initialLensData?.rightEyePrice === 'number' ? initialLensData.rightEyePrice : 0),
     leftEyePrice: typeof invoiceLensData.leftEyePrice === 'number' ? invoiceLensData.leftEyePrice : (typeof initialLensData?.leftEyePrice === 'number' ? initialLensData.leftEyePrice : 0)
@@ -347,7 +347,7 @@ export function useOpticsInvoiceEditor({
             add: initialLensData.leftEye.add || prev.leftEye.add,
           }
         }),
-        ...(initialLensData.pd !== undefined && initialLensData.pd !== null && initialLensData.pd !== '' && { pd: initialLensData.pd }),
+        ...(initialLensData.ep !== undefined && initialLensData.ep !== null && initialLensData.ep !== '' && { ep: initialLensData.ep }),
         ...(initialLensData.price !== undefined && { price: initialLensData.price }),
         ...(initialLensData.rightEyePrice !== undefined && { rightEyePrice: initialLensData.rightEyePrice }),
         ...(initialLensData.leftEyePrice !== undefined && { leftEyePrice: initialLensData.leftEyePrice }),
@@ -439,18 +439,18 @@ export function useOpticsInvoiceEditor({
       });
     }
 
-    const formatPd = (pd: LensData['pd']): string => {
-      if (typeof pd === 'string') return pd;
-      if (typeof pd === 'number') return pd.toString();
-      if (typeof pd === 'object' && pd !== null) {
-        if ('mono' in pd) {
-          return `mono: ${pd.mono.od}/${pd.mono.og}${pd.near ? ` + ${pd.near}` : ''}`;
+    const formatEp = (ep: LensData['ep']): string => {
+      if (typeof ep === 'string') return ep;
+      if (typeof ep === 'number') return ep.toString();
+      if (typeof ep === 'object' && ep !== null) {
+        if ('mono' in ep) {
+          return `mono: ${ep.mono.od}/${ep.mono.og}${ep.near ? ` + ${ep.near}` : ''}`;
         }
       }
       return '';
     };
     
-    const correctionNote = `${correctionLabel}: OD ${lensData.rightEye.sphere} ${lensData.rightEye.cylinder} ${lensData.rightEye.axis} / OG ${lensData.leftEye.sphere} ${lensData.leftEye.cylinder} ${lensData.leftEye.axis} - PD: ${formatPd(lensData.pd)}`;
+    const correctionNote = `${correctionLabel}: OD ${lensData.rightEye.sphere} ${lensData.rightEye.cylinder} ${lensData.rightEye.axis} / OG ${lensData.leftEye.sphere} ${lensData.leftEye.cylinder} ${lensData.leftEye.axis} - EP: ${formatEp(lensData.ep)}`;
 
     return {
       number: invoiceNumber,

@@ -30,7 +30,7 @@ interface OpticsInvoiceEditorProps {
     brand?: string;
     rightEye?: { sphere?: string; cylinder?: string; axis?: string; add?: string };
     leftEye?: { sphere?: string; cylinder?: string; axis?: string; add?: string };
-    pd?: number | { mono: { od: number; og: number }; near?: number } | string;
+    ep?: number | { mono: { od: number; og: number }; near?: number } | string;
     price?: number;
     rightEyePrice?: number;
     leftEyePrice?: number;
@@ -122,7 +122,7 @@ const OpticsInvoiceEditor: React.FC<OpticsInvoiceEditorProps> = ({
               axis: latest.axisLeft || '',
               add: prev.leftEye.add
             },
-            pd: (latest.pd as any) ?? prev.pd,
+            ep: (latest.ep as any) ?? prev.ep,
           }));
         }
       })
@@ -245,7 +245,7 @@ const OpticsInvoiceEditor: React.FC<OpticsInvoiceEditorProps> = ({
             axis: latest.axisLeft || '',
             add: prev.leftEye.add
           },
-          pd: (latest.pd as any) ?? prev.pd,
+          ep: (latest.ep as any) ?? prev.ep,
         }));
       }
     } catch {

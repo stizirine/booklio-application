@@ -60,7 +60,7 @@ const prescriptionSnapshotSchema = z.object({
     lensType: z.string().optional(),
     index: z.string().optional(),
     treatments: z.array(z.string()).optional(),
-    pd: z.union([z.number(), z.object({
+    ep: z.union([z.number(), z.object({
       mono: z.object({
         od: z.number(),
         og: z.number(),
@@ -115,7 +115,7 @@ const invoiceItemSchema = z.object({
       axis: z.string().optional(),
       add: z.string().optional(),
     }).optional(),
-    pd: z.union([z.number(), z.object({
+    ep: z.union([z.number(), z.object({
       mono: z.object({
         od: z.number(),
         og: z.number(),

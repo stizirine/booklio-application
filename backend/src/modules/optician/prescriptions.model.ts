@@ -32,7 +32,7 @@ export interface GlassesParams {
   lensType: LensType;
   index: LensIndex;
   treatments?: Array<Treatment>;
-  pd?: number | { mono: { od: number; og: number }; near?: number };
+  ep?: number | { mono: { od: number; og: number }; near?: number };
   segmentHeight?: number;
   vertexDistance?: number;
   baseCurve?: number;
@@ -66,7 +66,7 @@ export interface OpticalPrescriptionDoc {
   contactLensParams?: ContactLensParams;
   issuedAt: Date;
   expiresAt?: Date | null;
-  notes?: string | null;
+  add?: string | null;
   source?: 'manual' | 'ocr';
   createdAt: Date;
   updatedAt: Date;
@@ -101,7 +101,7 @@ const glassesParamsSchema = new Schema<GlassesParams>(
       required: false,
       default: [],
     },
-    pd: { type: Schema.Types.Mixed, required: false },
+    ep: { type: Schema.Types.Mixed, required: false },
     segmentHeight: { type: Number, required: false },
     vertexDistance: { type: Number, required: false },
     baseCurve: { type: Number, required: false },
@@ -197,7 +197,7 @@ const schema = new Schema<OpticalPrescriptionDoc>(
     contactLensParams: { type: contactLensParamsSchema, required: false },
     issuedAt: { type: Date, required: true },
     expiresAt: { type: Date, required: false, default: null },
-    notes: { type: String, required: false, default: null },
+    add: { type: String, required: false, default: null },
     source: { type: String, enum: ['manual', 'ocr'], required: false },
   },
   { timestamps: true }

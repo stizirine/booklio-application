@@ -27,7 +27,7 @@ export interface OpticsInvoicePrefill {
       axis?: string;
       add?: string;
     };
-    pd?: string | number | { mono: { od: number; og: number }; near?: number };
+    ep?: string | number | { mono: { od: number; og: number }; near?: number };
     price?: number;
     rightEyePrice?: number;
     leftEyePrice?: number;
@@ -131,7 +131,7 @@ export function useOpticsInvoicePrefill({
                 axis: latest.axisLeft?.toString() || '',
                 add: '', // Non disponible directement dans la prescription
               },
-              pd: latest.pd as any,
+              ep: latest.ep as any,
               price: 0, // À saisir manuellement
               rightEyePrice: 0, // À saisir manuellement
               leftEyePrice: 0, // À saisir manuellement
@@ -215,7 +215,7 @@ export function useOpticsInvoicePrefill({
               axis: latest.axisLeft?.toString() || '',
               add: '',
             },
-            pd: latest.pd as any,
+            ep: latest.ep as any,
             price: 0,
             rightEyePrice: 0,
             leftEyePrice: 0,

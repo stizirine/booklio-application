@@ -43,7 +43,7 @@ export interface PrescriptionSnapshotGlassesParams {
   lensType: LensType;
   index: LensIndex;
   treatments?: Array<Treatment>;
-  pd?: number | { mono: { od: number; og: number }; near?: number };
+  ep?: number | { mono: { od: number; og: number }; near?: number };
   segmentHeight?: number;
   vertexDistance?: number;
   baseCurve?: number;
@@ -173,7 +173,7 @@ const invoiceSchema = new Schema(
                   enum: Object.values(Treatment),
                   default: [],
                 },
-                pd: { type: Schema.Types.Mixed },
+                ep: { type: Schema.Types.Mixed },
                 segmentHeight: { type: Number },
                 vertexDistance: { type: Number },
                 baseCurve: { type: Number },
@@ -335,7 +335,7 @@ const invoiceSchema = new Schema(
                     ),
                     required: false,
                   },
-                  pd: { type: Schema.Types.Mixed },
+                  ep: { type: Schema.Types.Mixed },
                 },
                 { _id: false }
               ),

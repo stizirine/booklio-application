@@ -6,7 +6,7 @@ import { Client } from '@stores/clientStore';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { OpticsRecord } from '../types';
-import { convertPdToString } from '../utils';
+import { convertEpToString } from '../utils';
 
 export const useOpticsSection = (client?: Client | null) => {
   const { t } = useTranslation();
@@ -26,8 +26,8 @@ export const useOpticsSection = (client?: Client | null) => {
     cylinderLeft: '',
     axisRight: '',
     axisLeft: '',
-    pd: '',
-    notes: '',
+    ep: '',
+    add: '',
     // champs étendus lunettes
     lensType: 'single_vision' as any,
     index: '1.50' as any,
@@ -67,8 +67,8 @@ export const useOpticsSection = (client?: Client | null) => {
       cylinderLeft: '',
       axisRight: '',
       axisLeft: '',
-      pd: '',
-      notes: '',
+      ep: '',
+      add: '',
     });
     setEditingId(null);
     setIsViewing(false);
@@ -91,8 +91,8 @@ export const useOpticsSection = (client?: Client | null) => {
       cylinderLeft: rec.cylinderLeft || '',
       axisRight: rec.axisRight || '',
       axisLeft: rec.axisLeft || '',
-      pd: convertPdToString(rec.pd),
-      notes: rec.notes || '',
+      ep: convertEpToString(rec.ep),
+      add: rec.add || '',
       lensType: rec.lensType,
       index: rec.index,
       treatments: rec.treatments || [],
@@ -119,8 +119,8 @@ export const useOpticsSection = (client?: Client | null) => {
       cylinderLeft: rec.cylinderLeft || '',
       axisRight: rec.axisRight || '',
       axisLeft: rec.axisLeft || '',
-      pd: convertPdToString(rec.pd),
-      notes: rec.notes || '',
+      ep: convertEpToString(rec.ep),
+      add: rec.add || '',
       lensType: rec.lensType,
       index: rec.index,
       treatments: rec.treatments || [],
@@ -165,7 +165,7 @@ export const useOpticsSection = (client?: Client | null) => {
           lensType: updated.lensType,
           index: updated.index,
           treatments: updated.treatments || [],
-          pd: convertPdToString(updated.pd as any) || prev.pd,
+          ep: convertEpToString(updated.ep as any) || prev.ep,
           segmentHeight: updated.segmentHeight ?? prev.segmentHeight,
           vertexDistance: updated.vertexDistance ?? prev.vertexDistance,
           baseCurve: updated.baseCurve ?? prev.baseCurve,
@@ -183,7 +183,7 @@ export const useOpticsSection = (client?: Client | null) => {
           lensType: created.lensType,
           index: created.index,
           treatments: created.treatments || [],
-          pd: convertPdToString(created.pd as any) || prev.pd,
+          ep: convertEpToString(created.ep as any) || prev.ep,
           segmentHeight: created.segmentHeight ?? prev.segmentHeight,
           vertexDistance: created.vertexDistance ?? prev.vertexDistance,
           baseCurve: created.baseCurve ?? prev.baseCurve,
