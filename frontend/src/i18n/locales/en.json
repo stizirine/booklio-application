@@ -469,7 +469,7 @@
     "autoCalc": "Auto calculation",
     "history": "History",
     "noRecords": "No records yet.",
-    "historyLine": "OD {{od}} / OS {{og}} {{pd}}",
+    "historyLine": "OD {{od}} / OS {{og}} {{ep}}",
     
     "glassesParamsTitle": "Glasses parameters",
     "lensType": "Lens type",

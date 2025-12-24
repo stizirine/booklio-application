@@ -58,7 +58,7 @@ const GlassesParamsSchema = z.object({
   lensType: LensTypeSchema,
   index: LensIndexSchema,
   treatments: z.array(TreatmentSchema).optional().default([]),
-  pd: z
+  ep: z
     .union([
       z.number(),
       z.object({ mono: z.object({ od: z.number(), og: z.number() }), near: z.number().optional() }),
@@ -126,7 +126,7 @@ const CreateSchema = z.object({
     .transform((v) => new Date(v))
     .nullable()
     .optional(),
-  notes: z.string().nullable().optional(),
+  add: z.string().nullable().optional(),
   source: z.enum(['manual', 'ocr']).optional(),
 });
 
@@ -160,7 +160,7 @@ const UpdateSchema = z.object({
     .transform((v) => new Date(v))
     .nullable()
     .optional(),
-  notes: z.string().nullable().optional(),
+  add: z.string().nullable().optional(),
   source: z.enum(['manual', 'ocr']).optional(),
 });
 

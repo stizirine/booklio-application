@@ -2,14 +2,14 @@ import FormFieldWrapper from '@components/FormFieldWrapper';
 import React from 'react';
 import { OpticsRecord } from '../types';
 
-function formatPdValue(pd: unknown): string {
-  if (!pd) return '';
-  if (typeof pd === 'object' && pd !== null && 'mono' in (pd as any)) {
-    const v = pd as any;
+function formatEpValue(ep: unknown): string {
+  if (!ep) return '';
+  if (typeof ep === 'object' && ep !== null && 'mono' in (ep as any)) {
+    const v = ep as any;
     const base = `${v.mono.od}/${v.mono.og}`;
     return v.near ? `${base} + ${v.near}` : base;
   }
-  return String(pd);
+  return String(ep);
 }
 
 interface CorrectionFieldsProps {
@@ -102,17 +102,17 @@ export const CorrectionFields: React.FC<CorrectionFieldsProps> = ({
           <label className="text-[10px] sm:text-xs font-semibold text-gray-600 mb-1 block">{t('optics.other')}</label>
           <div className="space-y-1.5 sm:space-y-2">
             <input
-              name="pd"
-              value={formatPdValue(form.pd)}
+              name="ep"
+              value={formatEpValue(form.ep)}
               onChange={onChange}
-              placeholder={t('optics.pd')}
+              placeholder={t('optics.ep')}
               className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
             />
             <textarea 
-              name="notes" 
-              value={form.notes || ''} 
+              name="add" 
+              value={form.add || ''} 
               onChange={onChange} 
-              placeholder={t('optics.notes')} 
+              placeholder={t('optics.add')} 
               className="w-full border border-gray-300 rounded-lg px-2 py-1.5 min-h-[60px] sm:min-h-[72px] text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 resize-none" 
             />
           </div>

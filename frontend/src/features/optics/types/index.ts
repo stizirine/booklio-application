@@ -11,8 +11,8 @@ export type OpticsRecord = {
   cylinderLeft?: string;
   axisRight?: string;
   axisLeft?: string;
-  pd?: string | number | PdValue;
-  notes?: string;
+  ep?: string | number | EpValue;
+  add?: string;
   // Paramètres lunettes
   lensType?: string;
   index?: string;
@@ -29,12 +29,12 @@ export type OpticsRecord = {
   kind?: 'glasses' | 'contact_lens';
 };
 
-// Type pour la valeur PD (peut être simple ou structurée)
-export type PdValue = string | number | { mono: { od: number; og: number }; near?: number };
+// Type pour la valeur EP (peut être simple ou structurée)
+export type EpValue = string | number | { mono: { od: number; og: number }; near?: number };
 
 // Types pour les formulaires
 export interface OpticsFormData extends Omit<OpticsRecord, 'id' | 'clientId' | 'createdAt' | 'updatedAt'> {
-  pd?: string | PdValue;
+  ep?: string | EpValue;
 }
 
 // Enums pour les traitements de verres

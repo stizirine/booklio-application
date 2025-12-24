@@ -95,7 +95,7 @@ const ProfilePage: React.FC = () => {
                 />
                 
                 {/* Informations du compte - intégrées de manière fluide */}
-                <div className="pt-6 border-t border-[var(--color-border)]">
+                {/* <div className="pt-6 border-t border-[var(--color-border)]">
                   <h3 className="text-sm font-semibold text-[var(--color-muted)] uppercase tracking-wide mb-4">
                     {modal.t('profile.accountInfo', { defaultValue: 'Informations du compte' })}
                   </h3>
@@ -151,7 +151,7 @@ const ProfilePage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </div>
+                </div> */}
               </div>
             )}
 

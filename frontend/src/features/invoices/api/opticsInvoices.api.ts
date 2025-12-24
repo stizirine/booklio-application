@@ -34,7 +34,7 @@ export interface OpticsInvoiceItem {
       axis: string;
       add: string;
     };
-    pd: number | { mono: { od: number; og: number }; near?: number };
+    ep: number | { mono: { od: number; og: number }; near?: number };
   };
 }
 
@@ -65,7 +65,7 @@ export interface OpticsInvoiceCreatePayload extends Omit<InvoiceCreatePayload, '
       lensType?: string;
       index?: string;
       treatments?: string[];
-      pd?: number | { mono: { od: number; og: number }; near?: number };
+      ep?: number | { mono: { od: number; og: number }; near?: number };
       segmentHeight?: number;
       vertexDistance?: number;
       baseCurve?: number;
@@ -94,7 +94,7 @@ export interface OpticsInvoiceCreatePayload extends Omit<InvoiceCreatePayload, '
       axis: number;
       add: number;
     };
-    pd: number | { mono: { od: number; og: number }; near?: number };
+    ep: number | { mono: { od: number; og: number }; near?: number };
   };
   frameData?: {
     brand: string;
@@ -125,7 +125,7 @@ export interface OpticsInvoiceUpdatePayload extends Omit<InvoiceUpdatePayload, '
       axis: number;
       add: number;
     };
-    pd: number | { mono: { od: number; og: number }; near?: number };
+    ep: number | { mono: { od: number; og: number }; near?: number };
   };
   frameData?: {
     brand: string;

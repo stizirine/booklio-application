@@ -7,7 +7,7 @@ import { Invoice } from '../types';
 function parseCorrectionFromNotes(notes?: string): {
   rightEye?: { sphere?: number; cylinder?: number; axis?: number; add?: number };
   leftEye?: { sphere?: number; cylinder?: number; axis?: number; add?: number };
-  pd?: number | { mono: { od: number; og: number }; near?: number };
+  ep?: number | { mono: { od: number; og: number }; near?: number };
 } | null {
   if (!notes) return null;
 
@@ -15,7 +15,7 @@ function parseCorrectionFromNotes(notes?: string): {
   // ou "Correction: OD sphere cylinder axis / OG sphere cylinder axis - PD: mono: od/og + near"
   const odMatch = notes.match(/OD\s+([-\d.]+(?:\s+[-\d.]+)?(?:\s+\d+)?)/i);
   const ogMatch = notes.match(/OG\s+([-\d.]+(?:\s+[-\d.]+)?(?:\s+\d+)?)/i);
-  const pdMatch = notes.match(/PD:\s*(.+?)(?:\s|$)/i);
+  const epMatch = notes.match(/EP:\s*(.+?)(?:\s|$)/i);
 
   const parseEye = (match: RegExpMatchArray | null): { sphere?: number; cylinder?: number; axis?: number; add?: number } | undefined => {
     if (!match) return undefined;
@@ -28,9 +28,9 @@ function parseCorrectionFromNotes(notes?: string): {
     };
   };
 
-  const parsePd = (pdStr?: string): number | { mono: { od: number; og: number }; near?: number } | undefined => {
-    if (!pdStr) return undefined;
-    const trimmed = pdStr.trim();
+  const parseEp = (epStr?: string): number | { mono: { od: number; og: number }; near?: number } | undefined => {
+    if (!epStr) return undefined;
+    const trimmed = epStr.trim();
     
     // Format "mono: od/og + near" ou "mono: od/og"
     const monoMatch = trimmed.match(/mono:\s*([\d.]+)\/([\d.]+)(?:\s+\+\s*([\d.]+))?/i);
@@ -53,11 +53,11 @@ function parseCorrectionFromNotes(notes?: string): {
 
   const rightEye = parseEye(odMatch);
   const leftEye = parseEye(ogMatch);
-  const pd = parsePd(pdMatch?.[1]);
+  const ep = parseEp(epMatch?.[1]);
 
-  if (!rightEye && !leftEye && !pd) return null;
+  if (!rightEye && !leftEye && !ep) return null;
 
-  return { rightEye, leftEye, pd };
+  return { rightEye, leftEye, ep };
 }
 
 /**
@@ -97,7 +97,7 @@ export function transformToCreatePayload(invoiceData: Partial<Invoice>, clientId
       lensType: 'single_vision', // Par défaut
       index: '1.60', // Par défaut
       treatments: ['anti_reflect'], // Par défaut
-      pd: correctionData.pd,
+      ep: correctionData.ep,
     },
     issuedAt: invoiceData.issuedAt ? new Date(invoiceData.issuedAt).toISOString() : undefined,
   } : undefined;
@@ -134,7 +134,7 @@ export function transformToCreatePayload(invoiceData: Partial<Invoice>, clientId
         axis: correctionData.leftEye?.axis ?? 0,
         add: correctionData.leftEye?.add ?? 0,
       },
-      pd: correctionData.pd ?? 0,
+      ep: correctionData.ep ?? 0,
     } : undefined,
   };
 }

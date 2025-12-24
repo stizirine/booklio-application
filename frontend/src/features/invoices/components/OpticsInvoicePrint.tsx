@@ -41,12 +41,12 @@ const OpticsInvoicePrint: React.FC<OpticsInvoicePrintProps> = ({ invoice, client
   const parseCorrectionFromNotes = (notes?: string) => {
     if (!notes) return null;
     // Format: "Correction: OD -2.5 -0.75 180 / OG -2.25 -0.5 10 - PD: 28.5/28.5"
-    const pdMatch = notes.match(/PD:\s*(.+?)(?:\s|$)/i);
+    const epMatch = notes.match(/EP:\s*(.+?)(?:\s|$)/i);
     const odMatch = notes.match(/OD\s+([-\d.]+(?:\s+[-\d.]+)?\s+\d+)/i);
     const ogMatch = notes.match(/OG\s+([-\d.]+(?:\s+[-\d.]+)?\s+\d+)/i);
     
     return {
-      pd: pdMatch ? pdMatch[1].trim() : null,
+      ep: epMatch ? epMatch[1].trim() : null,
       od: odMatch ? odMatch[1].trim() : null,
       og: ogMatch ? ogMatch[1].trim() : null,
     };
@@ -97,18 +97,18 @@ const OpticsInvoicePrint: React.FC<OpticsInvoicePrintProps> = ({ invoice, client
                 </p>
               </div>
               {/* Ecart pupillaire (droite) */}
-              {correction?.pd && (
+              {correction?.ep && (
                 <div className="text-right text-sm">
                   <p className="text-gray-700">
                     <span className="font-medium">
-                      {t('invoices.pupillaryDistance', { defaultValue: 'Distance pupillaire (PD)' })}:
+                      {t('invoices.eyeDistance', { defaultValue: 'Distance interpupillaire (EP)' })}:
                     </span>{' '}
-                    {correction.pd.includes('/') ? (
+                    {correction.ep.includes('/') ? (
                       <>
-                        {t('invoices.pd.mono', { defaultValue: 'mono' })}: {correction.pd.split('/')[0].trim()}/{correction.pd.split('/')[1].trim()}
+                        {t('invoices.ep.mono', { defaultValue: 'mono' })}: {correction.ep.split('/')[0].trim()}/{correction.ep.split('/')[1].trim()}
                       </>
                     ) : (
-                      correction.pd
+                      correction.ep
                     )}
                   </p>
                 </div>
