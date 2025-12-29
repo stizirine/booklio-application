@@ -133,7 +133,7 @@ const GlassesForm: React.FC<GlassesFormProps> = ({ form, handleSelect, handleTog
           ))}
         </Select>
       </Field>
-      // TODO Fournisseur de monture : Ajouter les champs frameEye, frameBridge, frameTemple
+      {/* // TODO Fournisseur de monture : Ajouter les champs frameEye, frameBridge, frameTemple */}
       {/* <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.frameEye')}</span>}>
         <Input value={form.frameEye || ''} onChange={(e) => handleSelect('frameEye', e.target.value)} className="text-xs sm:text-sm" />
       </Field>
