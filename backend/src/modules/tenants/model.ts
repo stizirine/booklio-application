@@ -12,6 +12,7 @@ export interface TenantDoc {
   clientType: ClientType;
   capabilities: Capability[];
   featureFlags: Record<FeatureFlag, boolean>;
+  currency?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,7 @@ const tenantSchema = new Schema<TenantDoc>(
     },
     capabilities: { type: [String], enum: Object.values(Capability), required: true, default: [] },
     featureFlags: { type: Schema.Types.Mixed, required: false, default: {} },
+    currency: { type: String, required: false, default: 'EUR' },
   },
   { timestamps: true }
 );

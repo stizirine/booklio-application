@@ -106,7 +106,7 @@ export function transformToCreatePayload(invoiceData: Partial<Invoice>, clientId
     clientId: finalClientId,
     type: 'InvoiceClient' as const,
     totalAmount: invoiceData.total || 0,
-    currency: 'MAD',
+    currency: invoiceData.currency || 'EUR',
     notes: {
       reason: 'Facture optique',
       comment: invoiceData.notes || '',
@@ -156,7 +156,7 @@ export function transformToUpdatePayload(
     clientId: finalClientId,
     type: 'InvoiceClient' as const, // Préserver le type InvoiceClient lors de la mise à jour
     totalAmount: invoiceData.total || currentInvoice.total || 0,
-    currency: 'MAD',
+    currency: invoiceData.currency || currentInvoice.currency || 'EUR',
     notes: {
       reason: 'Facture optique',
       comment: invoiceData.notes || currentInvoice.notes || '',

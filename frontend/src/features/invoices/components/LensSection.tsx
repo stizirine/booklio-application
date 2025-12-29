@@ -1,8 +1,11 @@
 import FormFieldWrapper from '@components/FormFieldWrapper';
 import { Field, Input, Select } from '@components/ui';
+import { useTenant } from '@contexts/TenantContext';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DEFAULT_CURRENCY } from '../constants';
 import { LensData } from '../hooks/useOpticsInvoiceEditor';
+import { getCurrencySymbol } from '../utils/currencyUtils';
 
 interface LensSectionProps {
   lensData: LensData;
@@ -89,6 +92,10 @@ const EyeCorrectionFields: React.FC<EyeCorrectionFieldsProps> = ({
   onLensChange,
   t,
 }) => {
+  const { tenant } = useTenant();
+  const currency = tenant?.currency || DEFAULT_CURRENCY;
+  const currencySymbol = getCurrencySymbol(currency);
+  
   const eyeLabel = eye === 'rightEye' 
     ? t('invoices.rightEye', { defaultValue: 'Œil droit (OD)' })
     : t('invoices.leftEye', { defaultValue: 'Œil gauche (OG)' });
@@ -123,7 +130,7 @@ const EyeCorrectionFields: React.FC<EyeCorrectionFieldsProps> = ({
             />
           </Field>
         ))}
-        <Field label={<span className="block text-xs text-gray-600 mb-1">{t('invoices.price', { defaultValue: 'Prix (DH)' })}</span>}>
+        <Field label={<span className="block text-xs text-gray-600 mb-1">{t('invoices.price', { defaultValue: 'Prix' })} ({currencySymbol})</span>}>
           <Input
             type="number"
             value={eyePrice === 0 ? '' : eyePrice}

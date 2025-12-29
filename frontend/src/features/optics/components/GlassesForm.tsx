@@ -2,10 +2,11 @@ import FormFieldWrapper from '@components/FormFieldWrapper';
 import { Field, Input, Select } from '@components/ui';
 import React, { useCallback, useMemo } from 'react';
 import { useOpticsStore } from '../store/opticsStore';
-import { FrameMaterial, FrameType, GLASSES_TREATMENTS } from '../types';
+import { FrameMaterial, FrameType, GLASSES_TREATMENTS, LensMaterial } from '../types';
 
 type _GlassesFormValues = {
   lensType?: string;
+  lensMaterial?: string;
   index?: string;
   treatments?: string[];
   segmentHeight?: string;
@@ -60,6 +61,15 @@ const GlassesForm: React.FC<GlassesFormProps> = ({ form, handleSelect, handleTog
     ] as string[];
   }, [config?.frameMaterials]);
 
+  const lensMaterials: string[] = useMemo(() => {
+    if (config?.lensMaterials && config.lensMaterials.length) return config.lensMaterials as string[];
+    return [
+      LensMaterial.Mineral,
+      LensMaterial.Organic,
+      LensMaterial.Polycarbonate
+    ] as string[];
+  }, [config?.lensMaterials]);
+
   const onSelectChange = useCallback((name: any) => (e: React.ChangeEvent<HTMLSelectElement>) => {
     handleSelect(name, e.target.value);
   }, [handleSelect]);
@@ -70,6 +80,16 @@ const GlassesForm: React.FC<GlassesFormProps> = ({ form, handleSelect, handleTog
         <Select value={form.lensType || 'single_vision'} onChange={onSelectChange('lensType')} className="text-xs sm:text-sm">
           {lensTypes.map((lt) => (
             <option key={lt} value={lt}>{t(`optics.${lt === 'single_vision' ? 'singleVision' : lt}`, { defaultValue: lt })}</option>
+          ))}
+        </Select>
+      </Field>
+      <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.lensMaterial')}</span>}>
+        <Select value={form.lensMaterial || ''} onChange={onSelectChange('lensMaterial')} className="text-xs sm:text-sm">
+          <option value="">{t('common.optional')}</option>
+          {lensMaterials.map(m => (
+            <option key={m} value={m} title={t(`optics.lensMaterialDescriptions.${m}`, { defaultValue: '' })}>
+              {t(`optics.lensMaterialList.${m}`, { defaultValue: m })}
+            </option>
           ))}
         </Select>
       </Field>
@@ -95,12 +115,14 @@ const GlassesForm: React.FC<GlassesFormProps> = ({ form, handleSelect, handleTog
           ))}
         </div>
       </div>
-      <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.segmentHeight')}</span>}>
+      {/* TODO Fournisseur de monture : Ajouter les champs segmentHeight, vertexDistance */}
+      {/* <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.segmentHeight')}</span>}>
         <Input value={form.segmentHeight || ''} onChange={(e) => handleSelect('segmentHeight', e.target.value)} className="text-xs sm:text-sm" />
       </Field>
       <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.vertexDistance')}</span>}>
         <Input value={form.vertexDistance || ''} onChange={(e) => handleSelect('vertexDistance', e.target.value)} className="text-xs sm:text-sm" />
-      </Field>
+      </Field> */}
+
       <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.baseCurve')}</span>}>
         <Input value={form.baseCurve || ''} onChange={(e) => handleSelect('baseCurve', e.target.value)} className="text-xs sm:text-sm" />
       </Field>
@@ -111,7 +133,8 @@ const GlassesForm: React.FC<GlassesFormProps> = ({ form, handleSelect, handleTog
           ))}
         </Select>
       </Field>
-      <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.frameEye')}</span>}>
+      // TODO Fournisseur de monture : Ajouter les champs frameEye, frameBridge, frameTemple
+      {/* <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.frameEye')}</span>}>
         <Input value={form.frameEye || ''} onChange={(e) => handleSelect('frameEye', e.target.value)} className="text-xs sm:text-sm" />
       </Field>
       <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.frameBridge')}</span>}>
@@ -119,7 +142,8 @@ const GlassesForm: React.FC<GlassesFormProps> = ({ form, handleSelect, handleTog
       </Field>
       <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.frameTemple')}</span>}>
         <Input value={form.frameTemple || ''} onChange={(e) => handleSelect('frameTemple', e.target.value)} className="text-xs sm:text-sm" />
-      </Field>
+      </Field> */}
+      
       <Field label={<span className="text-[10px] sm:text-xs font-semibold text-gray-600">{t('optics.frameMaterial')}</span>}>
         <Select value={form.frameMaterial || ''} onChange={onSelectChange('frameMaterial')} className="text-xs sm:text-sm">
           <option value="">{t('common.optional')}</option>

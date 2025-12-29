@@ -1,4 +1,6 @@
 import { ClientInvoiceSummary } from '@src/types/clients';
+import { useTenant } from '@contexts/TenantContext';
+import { DEFAULT_CURRENCY } from '../constants';
 import React from 'react';
 import ClientInvoicesSummary from './ClientInvoicesSummary';
 
@@ -11,8 +13,13 @@ interface ClientInvoicesInlineProps {
 // directement depuis les données du backend (invoiceSummary)
 const ClientInvoicesInline: React.FC<ClientInvoicesInlineProps> = ({ 
   invoiceSummary, 
-  currency = 'EUR' 
+  currency 
 }) => {
+  const { tenant } = useTenant();
+  
+  // Utiliser la devise passée en prop, sinon celle du tenant, sinon la devise par défaut
+  const displayCurrency = currency || tenant?.currency || DEFAULT_CURRENCY;
+  
   if (!invoiceSummary || invoiceSummary.invoiceCount === 0) {
     return null;
   }
@@ -22,7 +29,7 @@ const ClientInvoicesInline: React.FC<ClientInvoicesInlineProps> = ({
       <ClientInvoicesSummary 
         total={invoiceSummary.totalAmount} 
         balanceDue={invoiceSummary.dueAmount} 
-        currency={currency}
+        currency={displayCurrency}
         invoiceCount={invoiceSummary.invoiceCount}
         lastInvoiceAt={invoiceSummary.lastInvoiceAt}
       />

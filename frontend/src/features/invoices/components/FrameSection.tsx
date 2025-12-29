@@ -1,7 +1,10 @@
 import FormFieldWrapper from '@components/FormFieldWrapper';
 import { Field, Input, Select } from '@components/ui';
+import { useTenant } from '@contexts/TenantContext';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { DEFAULT_CURRENCY } from '../constants';
+import { getCurrencySymbol } from '../utils/currencyUtils';
 import { FrameData } from '../hooks/useOpticsInvoiceEditor';
 
 interface FrameSectionProps {
@@ -16,6 +19,10 @@ const FrameSection: React.FC<FrameSectionProps> = ({
   isReadOnly
 }) => {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
+  const currency = tenant?.currency || DEFAULT_CURRENCY;
+  const currencySymbol = getCurrencySymbol(currency);
+  
   return (
     <div className="mb-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -39,7 +46,7 @@ const FrameSection: React.FC<FrameSectionProps> = ({
               <option value="TR90">{t('invoices.tr90', { defaultValue: 'TR90' })}</option>
             </Select>
           </Field>
-          <Field label={t('invoices.price', { defaultValue: 'Prix (DH)' })} htmlFor="frame-price">
+          <Field label={`${t('invoices.price', { defaultValue: 'Prix' })} (${currencySymbol})`} htmlFor="frame-price">
             <Input id="frame-price" type="number" value={frameData.price === 0 ? '' : (frameData.price as any)} onChange={(e) => onFrameChange('price', parseFloat(e.target.value) || 0)} placeholder={t('invoices.pricePlaceholder', { defaultValue: '450' }) as string} />
           </Field>
         </div>

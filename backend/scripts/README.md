@@ -76,6 +76,10 @@ npm run script:create-account -- \
   - `optician` (défaut) : Opticien avec capacités optiques
   - `generic` : Client générique
 
+- `--currency <currency>` : Devise par défaut du tenant (défaut: `EUR`)
+  - Exemples: `EUR`, `USD`, `GBP`, `MAD`, `CAD`, `CHF`
+  - Cette devise sera utilisée par défaut pour toutes les factures créées par ce tenant
+
 - `--api-url <url>` : URL de l'API (défaut: `http://localhost:4000`)
 - `--api-key <key>` : API Key pour l'authentification (utilise `REQUIRED_HEADER_VALUE` par défaut)
 
@@ -101,6 +105,7 @@ npm run script:create-account -- \
   --email ichbilia-optique@gmail.com \
   --password OptiqueIchbilia2025! \
   --client-type optician \
+  --currency MAD \
   --first-name "Hassan" \
   --last-name "SGHOU" \
   --phone "+212661374807" \
@@ -274,6 +279,10 @@ NODE_ENV=prod MONGO_URI="mongodb://user:pass@localhost:27017/booklio?authSource=
 #### Options de configuration
 - `-c, --client-type <type>` : Type de client (optician, generic) [défaut: optician]
 
+- `--currency <currency>` : Devise par défaut du tenant (défaut: `EUR`)
+  - Exemples: `EUR`, `USD`, `GBP`, `MAD`, `CAD`, `CHF`
+  - Cette devise sera utilisée par défaut pour toutes les factures créées par ce tenant
+
 #### Options utilisateur
 - `--first-name <firstName>` : Prénom
 - `--last-name <lastName>` : Nom de famille
@@ -295,6 +304,7 @@ NODE_ENV=prod npm run script:create-account-direct -- \
   --email ichbilia-optique@gmail.com \
   --password OptiqueIchbilia2025! \
   --client-type optician \
+  --currency MAD \
   --first-name "Hassan" \
   --last-name "SGHOU" \
   --phone "+212661374807" \
@@ -370,6 +380,120 @@ Sur le serveur de production, assurez-vous que `MONGO_URI` dans `/var/www/bookli
 MONGO_URI=mongodb://booklio:password@localhost:27017/booklio?authSource=admin
 
 # Remplacez 'password' par le mot de passe réel encodé (%40 pour @)
+```
+
+## update-tenant-currency.ts
+
+Script pour mettre à jour la devise d'un tenant existant dans la base de données.
+
+> 💡 **Usage**: Utile pour changer la devise par défaut d'un tenant après sa création, par exemple pour passer de EUR à MAD pour un tenant marocain.
+
+### Prérequis
+
+- Accès à MongoDB (via `MONGO_URI`)
+- Tenant existant dans la base de données
+
+### Usage de base
+
+```bash
+# Mettre à jour la devise d'un tenant
+npm run script:update-tenant-currency -- \
+  --tenant-id ichbilia-optique \
+  --currency MAD
+
+# Avec rechargement automatique du registry via l'API
+npm run script:update-tenant-currency -- \
+  --tenant-id ichbilia-optique \
+  --currency MAD \
+  --api-url http://localhost:4000 \
+  --api-key dev-key-12345
+```
+
+### Options disponibles
+
+#### Options obligatoires
+- `-t, --tenant-id <tenantId>` : Identifiant du tenant à mettre à jour (ex: `ichbilia-optique`, `t1`)
+- `-c, --currency <currency>` : Nouvelle devise (ex: `MAD`, `EUR`, `USD`, `GBP`, `CAD`, `CHF`)
+
+#### Options optionnelles
+- `--api-url <url>` : URL de l'API pour recharger le registry après la mise à jour (défaut: `http://localhost:4000`)
+- `--api-key <key>` : API Key pour l'authentification (utilise `REQUIRED_HEADER_VALUE` par défaut)
+
+### Exemples d'utilisation
+
+#### 1. Mise à jour simple (sans rechargement du registry)
+
+```bash
+npm run script:update-tenant-currency -- \
+  --tenant-id ichbilia-optique \
+  --currency MAD
+```
+
+#### 2. Mise à jour avec rechargement automatique du registry
+
+```bash
+npm run script:update-tenant-currency -- \
+  --tenant-id ichbilia-optique \
+  --currency MAD \
+  --api-url http://localhost:4000 \
+  --api-key dev-key-12345
+```
+
+#### 3. Utilisation en production
+
+```bash
+NODE_ENV=prod npm run script:update-tenant-currency -- \
+  --tenant-id prod-tenant \
+  --currency USD \
+  --api-url https://api.mondomaine.com \
+  --api-key prod-api-key-xyz
+```
+
+### Sortie exemple
+
+```
+🔌 Connexion à MongoDB...
+
+✅ Connecté à MongoDB
+
+🔍 Recherche du tenant "ichbilia-optique"...
+✅ Tenant trouvé:
+   Tenant ID: ichbilia-optique
+   Devise actuelle: EUR
+   Nouvelle devise: MAD
+
+🔄 Mise à jour de la devise...
+✅ Tenant ichbilia-optique mis à jour. Nouvelle devise: MAD
+
+🔄 Tentative de rechargement du registry via l'API: http://localhost:4000/v1/tenants/reload
+✅ Registry rechargé avec succès via l'API.
+
+✅ Déconnexion de MongoDB
+```
+
+### Avantages
+
+✅ **Mise à jour rapide** - Change la devise sans recréer le tenant
+✅ **Rechargement automatique** - Option pour recharger le registry via l'API
+✅ **Non destructif** - Ne modifie que le champ `currency` du tenant
+✅ **Idempotent** - Peut être exécuté plusieurs fois sans risque
+
+### Notes importantes
+
+1. **Registry à jour** : Si vous utilisez `--api-url`, le registry sera automatiquement rechargé. Sinon, l'API devra être redémarrée pour prendre en compte la nouvelle devise.
+2. **Factures existantes** : Les factures déjà créées conservent leur devise d'origine. Seules les nouvelles factures utiliseront la nouvelle devise du tenant.
+3. **Validation** : Le script ne valide pas le code devise. Assurez-vous d'utiliser un code valide (EUR, USD, GBP, MAD, CAD, CHF, etc.).
+
+### Ajout au package.json
+
+Le script est déjà configuré dans `backend/package.json` :
+
+```json
+{
+  "scripts": {
+    "script:update-tenant-currency": "tsx scripts/update-tenant-currency.ts"
+  }
+}
 ```
 
 ## migrate-invoice-items.ts

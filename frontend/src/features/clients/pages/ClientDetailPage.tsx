@@ -247,7 +247,7 @@ const ClientDetailPage: React.FC = () => {
             phone: client.phone || undefined,
           },
           status: 'draft',
-          currency: invoiceData.currency || 'MAD',
+          currency: invoiceData.currency || config.invoice.currency || 'EUR',
           issuedAt: invoiceData.issuedAt || new Date().toISOString(),
           items: invoiceData.items || [],
           notes: invoiceData.notes,
@@ -267,7 +267,7 @@ const ClientDetailPage: React.FC = () => {
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la facture optique:', error);
     }
-  }, [opticsInvoiceEditingMode, client, currentOpticsInvoice, updateOpticsInvoice]);
+  }, [opticsInvoiceEditingMode, client, currentOpticsInvoice, updateOpticsInvoice, config.invoice.currency]);
 
   const handleCloseOpticsInvoiceEditor = useCallback(() => {
     setShowOpticsInvoiceEditor(false);

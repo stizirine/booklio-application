@@ -24,7 +24,7 @@ const ClientInvoicesSection: React.FC<ClientInvoicesSectionProps> = ({
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm -mx-3 sm:-mx-4 px-3 sm:px-4 py-2 sm:py-3 mb-2 sm:mb-4 border-b border-gray-200">
           <InvoiceStatistics
             invoices={invoices}
-            currency={config.currency || invoices[0]?.currency || 'EUR'}
+            currency={config.currency || 'EUR'}
             className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2"
           />
         </div>

@@ -64,6 +64,7 @@ export const useOpticsStore = create<OpticsStore>()(
           ep: r.glassesParams?.ep,
           add: r.add,
           lensType: r.glassesParams?.lensType,
+          lensMaterial: r.glassesParams?.lensMaterial,
           index: r.glassesParams?.index,
           treatments: r.glassesParams?.treatments || [],
           segmentHeight: r.glassesParams?.segmentHeight?.toString?.() ?? undefined,

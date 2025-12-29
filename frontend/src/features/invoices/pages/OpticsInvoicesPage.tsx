@@ -397,7 +397,7 @@ const OpticsInvoicesPage: React.FC = () => {
                         <div className="flex-shrink-0 text-right">
                           <div className="mb-2">
                             <div className="text-lg font-bold text-gray-900">
-                              {invoice.total?.toLocaleString('fr-FR')} {invoice.currency || 'MAD'}
+                              {invoice.total?.toLocaleString('fr-FR')} {invoice.currency || 'EUR'}
                             </div>
                           </div>
                           {invoice.issuedAt && (

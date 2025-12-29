@@ -12,6 +12,7 @@ router.get('/me', (req, res) => {
     clientType: req.tenant.clientType,
     capabilities: req.tenant.capabilities,
     featureFlags: req.tenant.featureFlags || {},
+    ...(req.tenant.currency !== undefined && { currency: req.tenant.currency }),
   };
   return res.json(payload);
 });
