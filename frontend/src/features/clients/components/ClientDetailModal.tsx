@@ -197,7 +197,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
             phone: client.phone || undefined,
           },
           status: 'draft',
-          currency: invoiceData.currency || 'MAD',
+          currency: invoiceData.currency || config.invoice.currency || 'EUR',
           issuedAt: invoiceData.issuedAt || new Date().toISOString(),
           items: invoiceData.items || [],
           notes: invoiceData.notes,
@@ -217,7 +217,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la facture optique:', error);
     }
-  }, [opticsInvoiceEditingMode, client, currentOpticsInvoice, opticsInvoicesHook]);
+  }, [opticsInvoiceEditingMode, client, currentOpticsInvoice, opticsInvoicesHook, config.invoice.currency]);
 
   const handleCloseOpticsInvoiceEditor = useCallback(() => {
     setShowOpticsInvoiceEditor(false);
@@ -713,7 +713,7 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = React.memo(({ open, 
                 <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm -mx-3 sm:-mx-4 px-3 sm:px-4 py-2 sm:py-3 mb-2 sm:mb-4 border-b border-gray-200">
                   <InvoiceStatistics 
                     invoices={invoicesHook.invoices} 
-                    currency={config.invoice.currency || invoicesHook.invoices[0]?.currency || 'EUR'}
+                    currency={config.invoice.currency || 'EUR'}
                     className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2"
                   />
                 </div>

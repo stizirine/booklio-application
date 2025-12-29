@@ -1,16 +1,18 @@
 import api from '../../../services/api';
 import {
-  ContactLensDesign,
-  ContactLensType,
-  FrameMaterial,
-  FrameType,
-  LensType,
-  PrismBase,
+    ContactLensDesign,
+    ContactLensType,
+    FrameMaterial,
+    FrameType,
+    LensMaterial,
+    LensType,
+    PrismBase,
 } from '../types';
 
 // Configuration Optique
 export type OpticsConfig = {
   lensTypes?: LensType[] | string[];
+  lensMaterials?: LensMaterial[] | string[];
   indices?: string[];
   treatments?: string[]; // ex: anti_reflect, uv_protect, blue_light, hard_coat
   frameTypes?: FrameType[] | string[];
@@ -43,6 +45,7 @@ export type OpticsRecordPayload = {
   add?: string;
   // paramètres lunettes (UI à venir – valeurs par défaut si non saisis)
   lensType?: LensType | string;
+  lensMaterial?: LensMaterial | string;
   index?: string;
   treatments?: string[];
   segmentHeight?: number;
@@ -113,6 +116,7 @@ const toBackendPrescriptionPayload = (p: OpticsRecordPayload) => {
     },
     glassesParams: {
       lensType: (p.lensType as LensType) || LensType.SingleVision,
+      lensMaterial: p.lensMaterial || undefined,
       index: p.index || '1.50',
       treatments: p.treatments || [],
       ep: n(p.ep) ?? 0,
@@ -231,6 +235,7 @@ const toBackendPrescriptionPatch = (p: Partial<OpticsRecordPayload>) => {
   // glassesParams
   const gp: any = {};
   if (p.lensType !== undefined) gp.lensType = p.lensType;
+  if (p.lensMaterial !== undefined) gp.lensMaterial = p.lensMaterial;
   if (p.index !== undefined) gp.index = p.index;
   if (p.treatments !== undefined) gp.treatments = p.treatments;
   { const v = n(p.ep); if (p.ep !== undefined && v !== undefined) gp.ep = v; }

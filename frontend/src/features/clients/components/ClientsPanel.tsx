@@ -9,7 +9,6 @@ import type { ClientAppointmentItem, ClientItem, NewClientPayload } from '@src/t
 import { AppointmentStatus } from '@src/types';
 import React, { useDeferredValue, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTenant } from '../../../contexts/TenantContext';
 import QuickCreateClientForm from './QuickCreateClientForm';
 
 interface ClientsPanelProps {
@@ -203,7 +202,6 @@ function ClientAppointmentRow({ appointment }: { appointment: ClientAppointmentI
 const ClientAppointmentRowMemo = React.memo(ClientAppointmentRow);
 
 const ClientsPanel: React.FC<ClientsPanelProps> = ({ clients, loading, onSearch: _onSearch, onCreate, onSelect }) => {
-  const { tenant: _tenant } = useTenant();
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
   const [showCreateForm, setShowCreateForm] = useState(false);

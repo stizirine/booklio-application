@@ -30,6 +30,7 @@ export const useOpticsSection = (client?: Client | null) => {
     add: '',
     // champs étendus lunettes
     lensType: 'single_vision' as any,
+    lensMaterial: '' as any,
     index: '1.50' as any,
     treatments: [] as string[],
     segmentHeight: '' as any,
@@ -94,6 +95,7 @@ export const useOpticsSection = (client?: Client | null) => {
       ep: convertEpToString(rec.ep),
       add: rec.add || '',
       lensType: rec.lensType,
+      lensMaterial: rec.lensMaterial,
       index: rec.index,
       treatments: rec.treatments || [],
       segmentHeight: rec.segmentHeight,
@@ -122,6 +124,7 @@ export const useOpticsSection = (client?: Client | null) => {
       ep: convertEpToString(rec.ep),
       add: rec.add || '',
       lensType: rec.lensType,
+      lensMaterial: rec.lensMaterial,
       index: rec.index,
       treatments: rec.treatments || [],
       segmentHeight: rec.segmentHeight,
@@ -163,6 +166,7 @@ export const useOpticsSection = (client?: Client | null) => {
         setForm(prev => ({
           ...prev,
           lensType: updated.lensType,
+          lensMaterial: updated.lensMaterial,
           index: updated.index,
           treatments: updated.treatments || [],
           ep: convertEpToString(updated.ep as any) || prev.ep,
@@ -181,6 +185,7 @@ export const useOpticsSection = (client?: Client | null) => {
         setForm(prev => ({
           ...prev,
           lensType: created.lensType,
+          lensMaterial: created.lensMaterial,
           index: created.index,
           treatments: created.treatments || [],
           ep: convertEpToString(created.ep as any) || prev.ep,

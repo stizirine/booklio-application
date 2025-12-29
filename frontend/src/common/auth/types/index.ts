@@ -32,6 +32,7 @@ export interface Tenant {
   clientType: ClientType;
   capabilities: Capability[];
   featureFlags: Record<FeatureFlag, boolean>;
+  currency?: string;
 }
 
 

@@ -27,6 +27,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   clientType: z.enum(['generic', 'optician']).optional().default('generic'),
+  currency: z.string().optional(),
   // Informations personnelles (optionnelles)
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -128,6 +129,7 @@ router.post('/register', async (req: Request, res: Response) => {
     email,
     password,
     clientType,
+    currency,
     firstName,
     lastName,
     phone,
@@ -184,12 +186,13 @@ router.post('/register', async (req: Request, res: Response) => {
       clientType: clientType as ClientType,
       capabilities,
       featureFlags,
+      currency: currency || 'EUR',
     });
 
     // Recharger le registry pour inclure le nouveau tenant
     await tenantRegistry.load();
 
-    console.log('Tenant créé:', { tenantId, clientType, capabilities, featureFlags });
+    console.log('Tenant créé:', { tenantId, clientType, capabilities, featureFlags, currency: currency || 'EUR' });
   }
 
   const passwordHash = await bcrypt.hash(password, Number(process.env.BCRYPT_SALT_ROUNDS || 12));
@@ -354,6 +357,7 @@ router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) 
       clientType: cfg?.clientType ?? 'generic',
       capabilities: cfg?.capabilities ?? [],
       featureFlags: cfg?.featureFlags ?? {},
+      ...(cfg?.currency !== undefined && { currency: cfg.currency }),
     },
   });
 });

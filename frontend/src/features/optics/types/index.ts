@@ -15,6 +15,7 @@ export type OpticsRecord = {
   add?: string;
   // Paramètres lunettes
   lensType?: string;
+  lensMaterial?: string;
   index?: string;
   treatments?: string[];
   segmentHeight?: string | number;
@@ -74,6 +75,12 @@ export enum FrameMaterial {
   TR90 = 'tr90',
   Carbon = 'carbon',
   Wood = 'wood',
+}
+
+export enum LensMaterial {
+  Mineral = 'mineral',
+  Organic = 'organic',
+  Polycarbonate = 'polycarbonate'
 }
 
 export enum PrismBase {

@@ -387,7 +387,7 @@
     "acetate": "Acétate",
     "titanium": "Titane",
     "tr90": "TR90",
-    "price": "Prix (DH)",
+    "price": "Prix",
     "pricePlaceholder": "450",
     "correctionLenses": "Correction / Verres",
     "organic": "Organique",
@@ -577,6 +577,7 @@
     "singleVision": "Unifocales",
     "bifocal": "Bifocales",
     "progressive": "Progressives",
+    "lensMaterial": "Matière du verre",
     "index": "Indice",
     "indexPlaceholder": "Indice (ex: 1.50)",
     "treatments": "Traitements",
@@ -613,6 +614,17 @@
       "tr90": "TR90",
       "carbon": "Carbone",
       "wood": "Bois"
+    },
+    "lensMaterialList": {
+      "mineral": "Verres minéraux",
+      "organic": "Verres organiques",
+      "polycarbonate": "Polycarbonate"
+    },
+    "lensMaterialDescriptions": {
+      "mineral": "Très bonne qualité optique mais plus lourds et plus cassants, donc de moins en moins utilisés au quotidien.",
+      "organic": "Plus légers, très résistants aux chocs, idéals pour lunettes de tous les jours, enfants et sport.",
+      "polycarbonate": "Matériau très résistant aux impacts, adapté aux environnements à risque et aux montures percées",
+      "trivex": "Matériau très résistant aux impacts, adapté aux environnements à risque et aux montures percées"
     },
 
     "clType": "Type de lentille de contact",

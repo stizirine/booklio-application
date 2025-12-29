@@ -11,6 +11,7 @@ declare module 'express-serve-static-core' {
       clientType: ClientType;
       capabilities: Capability[];
       featureFlags?: Partial<Record<FeatureFlag, boolean>>;
+      currency?: string;
     };
   }
 }
@@ -29,6 +30,7 @@ export function resolveTenant(req: Request, _res: Response, next: NextFunction) 
       clientType: cfg.clientType,
       capabilities: cfg.capabilities,
       featureFlags: cfg.featureFlags ?? {},
+      ...(cfg.currency !== undefined && { currency: cfg.currency }),
     };
   }
   return next();

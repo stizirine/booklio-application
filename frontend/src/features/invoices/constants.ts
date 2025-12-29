@@ -5,6 +5,9 @@ export const CURRENCIES = [
   { value: 'EUR', label: 'EUR (€)', symbol: '€' },
   { value: 'USD', label: 'USD ($)', symbol: '$' },
   { value: 'GBP', label: 'GBP (£)', symbol: '£' },
+  { value: 'MAD', label: 'MAD (DH)', symbol: 'DH' },
+  { value: 'CAD', label: 'CAD ($)', symbol: '$' },
+  { value: 'CHF', label: 'CHF', symbol: 'CHF' },
 ] as const;
 
 export const DEFAULT_CURRENCY = 'EUR';

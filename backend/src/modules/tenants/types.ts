@@ -27,6 +27,7 @@ export interface TenantConfig {
   clientType: ClientType; // e.g., 'generic', 'optician'
   capabilities: Capability[]; // e.g., ['optics_measurements']
   featureFlags?: Partial<Record<FeatureFlag, boolean>>;
+  currency?: string;
 }
 
 export interface TenantInfoResponse {
@@ -34,4 +35,5 @@ export interface TenantInfoResponse {
   clientType: ClientType;
   capabilities: Capability[];
   featureFlags: Partial<Record<FeatureFlag, boolean>>;
+  currency?: string;
 }

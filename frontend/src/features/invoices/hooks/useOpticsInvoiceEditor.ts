@@ -1,5 +1,7 @@
+import { useTenant } from '@contexts/TenantContext';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DEFAULT_CURRENCY } from '../constants';
 import { Invoice, InvoiceItem } from '../types';
 
 export interface FrameData {
@@ -243,6 +245,7 @@ export function useOpticsInvoiceEditor({
   initialInvoiceNumber,
 }: UseOpticsInvoiceEditorProps): UseOpticsInvoiceEditorReturn {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
   
   // Extraire les données depuis les items de la facture si elle existe
   const extractedData = invoice ? extractDataFromInvoiceItems(invoice) : {};
@@ -459,9 +462,10 @@ export function useOpticsInvoiceEditor({
       items,
       total: calculateTotal(),
       subtotal: calculateTotal(),
+      currency: tenant?.currency || invoice?.currency || DEFAULT_CURRENCY,
       notes: correctionNote
     };
-  }, [frameData, lensData, invoiceNumber, invoiceDate, clientName, calculateTotal, t, selectedClientId]);
+  }, [frameData, lensData, invoiceNumber, invoiceDate, clientName, calculateTotal, t, selectedClientId, tenant?.currency, invoice?.currency]);
 
   return {
     // États

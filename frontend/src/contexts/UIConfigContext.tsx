@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 import { FeatureFlag } from '../common/auth/types';
-import { useCapabilities } from './TenantContext';
+import { useCapabilities, useTenant } from './TenantContext';
 
 interface UIConfig {
   // Configuration des factures
@@ -93,6 +93,7 @@ export const UIConfigProvider: React.FC<UIConfigProviderProps> = ({
   });
   
   const { isOptician, hasFeatureFlag } = useCapabilities();
+  const { tenant } = useTenant();
 
   const updateConfig = useCallback((updates: Partial<UIConfig>) => {
     setConfig(prev => ({
@@ -131,6 +132,15 @@ export const UIConfigProvider: React.FC<UIConfigProviderProps> = ({
     setConfig(prevConfig => {
       const newConfig = { ...prevConfig };
       let hasChanges = false;
+      
+      // Mettre à jour la devise depuis le tenant
+      if (tenant?.currency && prevConfig.invoice.currency !== tenant.currency) {
+        newConfig.invoice = {
+          ...prevConfig.invoice,
+          currency: tenant.currency,
+        };
+        hasChanges = true;
+      }
       
       // Configuration des factures basée sur les capacités
           if (hasFeatureFlag(FeatureFlag.InvoicesAutoReminder) && !prevConfig.invoice.showStatistics) {
@@ -177,7 +187,7 @@ export const UIConfigProvider: React.FC<UIConfigProviderProps> = ({
       
       return hasChanges ? newConfig : prevConfig;
     });
-  }, [isOptician, hasFeatureFlag]);
+  }, [isOptician, hasFeatureFlag, tenant?.currency]);
 
   const value: UIConfigContextType = {
     config,

@@ -28,6 +28,7 @@ program
   .requiredOption('-e, --email <email>', 'Email de l\'utilisateur')
   .requiredOption('-p, --password <password>', 'Mot de passe')
   .option('-c, --client-type <type>', 'Type de client (optician, generic)', 'optician')
+  .option('--currency <currency>', 'Devise par défaut (EUR, USD, GBP, MAD, etc.)', 'EUR')
   .option('--first-name <firstName>', 'Prénom')
   .option('--last-name <lastName>', 'Nom')
   .option('--phone <phone>', 'Téléphone')
@@ -51,6 +52,7 @@ async function createAccountDirect() {
       email,
       password,
       clientType,
+      currency,
       firstName,
       lastName,
       phone,
@@ -99,6 +101,7 @@ async function createAccountDirect() {
         clientType: clientType === 'optician' ? ClientType.Optician : ClientType.Generic,
         capabilities,
         featureFlags,
+        currency: currency || 'MAD',
       });
       
       tenantCreated = true;
@@ -107,6 +110,7 @@ async function createAccountDirect() {
         tenantId: tenant.tenantId,
         clientType: tenant.clientType,
         capabilities: tenant.capabilities,
+        currency: tenant.currency,
       });
     } else {
       console.log(`✅ Tenant "${tenantId}" existe déjà`);

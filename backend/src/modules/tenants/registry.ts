@@ -13,6 +13,7 @@ const PROFILE_DEFAULTS: Record<string, Omit<TenantConfig, 'tenantId'>> = {
     clientType: ClientType.Generic,
     capabilities: [],
     featureFlags: {} as Partial<Record<FeatureFlag, boolean>>,
+    currency: 'EUR',
   },
   optician: {
     clientType: ClientType.Optician,
@@ -20,6 +21,7 @@ const PROFILE_DEFAULTS: Record<string, Omit<TenantConfig, 'tenantId'>> = {
     featureFlags: { [FeatureFlag.OpticsMeasurements]: true } as Partial<
       Record<FeatureFlag, boolean>
     >,
+    currency: 'EUR',
   },
 };
 
@@ -52,6 +54,7 @@ export class TenantRegistry {
           clientType: t.clientType,
           capabilities: Array.isArray(t.capabilities) ? t.capabilities : [],
           featureFlags: (t.featureFlags as Record<string, boolean>) || {},
+          ...(t.currency !== undefined && { currency: t.currency }),
         };
         this.byTenantId.set(cfg.tenantId, cfg);
       }
@@ -88,6 +91,9 @@ export class TenantRegistry {
             ...(resolvedDefaults.featureFlags || {}),
             ...(j.featureFlags || {}),
           },
+          ...((j.currency !== undefined || resolvedDefaults.currency !== undefined) && {
+            currency: j.currency || resolvedDefaults.currency,
+          }),
         };
         this.byTenantId.set(cfg.tenantId, cfg);
       }

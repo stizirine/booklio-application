@@ -2,9 +2,10 @@ import { Icon } from '@assets/icons';
 import { Button, Field, Input, Select, Textarea } from '@components/ui';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CURRENCIES, PAYMENT_METHODS } from '../constants';
+import { PAYMENT_METHODS } from '../constants';
 import { useInvoiceForm } from '../hooks/useInvoiceForm';
 import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload } from '../types';
+import { getCurrencySymbol } from '../utils/currencyUtils';
 
 interface InvoiceFormModalProps {
   open: boolean;
@@ -91,7 +92,7 @@ const InvoiceFormModal: React.FC<InvoiceFormModalProps> = ({
                 className="pr-16"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">
-                {formData.currency}
+                {getCurrencySymbol(formData.currency)}
               </span>
             </div>
           </Field>
@@ -111,7 +112,7 @@ const InvoiceFormModal: React.FC<InvoiceFormModalProps> = ({
                 className="pr-16"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">
-                {formData.currency}
+                {getCurrencySymbol(formData.currency)}
               </span>
             </div>
           </Field>
@@ -141,26 +142,11 @@ const InvoiceFormModal: React.FC<InvoiceFormModalProps> = ({
                   {t('invoices.balanceDue')}
                 </span>
                 <span className="text-base sm:text-lg font-bold text-indigo-600">
-                  {balanceDue.toFixed(2)} {formData.currency}
+                  {balanceDue.toFixed(2)} {getCurrencySymbol(formData.currency)}
                 </span>
               </div>
             </div>
           )}
-
-          {/* Devise */}
-          <Field label={t('invoices.currency')} htmlFor="invoice-currency">
-            <Select
-              id="invoice-currency"
-              value={formData.currency}
-              onChange={(e) => updateField('currency', e.target.value)}
-            >
-              {CURRENCIES.map((currency) => (
-                <option key={currency.value} value={currency.value}>
-                  {currency.label}
-                </option>
-              ))}
-            </Select>
-          </Field>
 
           {/* Notes */}
           <Field label={t('invoices.notes')} htmlFor="invoice-notes">

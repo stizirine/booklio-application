@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTenant } from '@contexts/TenantContext';
 import { DEFAULT_CURRENCY, DEFAULT_PAYMENT_METHOD, PaymentMethod } from '../constants';
 import { Invoice, InvoiceCreatePayload, InvoiceUpdatePayload } from '../types';
 
@@ -20,10 +21,16 @@ interface UseInvoiceFormProps {
 
 export function useInvoiceForm({ invoice, clientId, open, onSubmit }: UseInvoiceFormProps) {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Déterminer la devise initiale : tenant > default
+  const getInitialCurrency = (): string => {
+    return tenant?.currency || DEFAULT_CURRENCY;
+  };
+
   const [formData, setFormData] = useState<InvoiceFormData>({
-    currency: DEFAULT_CURRENCY,
+    currency: getInitialCurrency(),
     notes: '',
     totalAmount: '',
     advanceAmount: '',
@@ -33,16 +40,19 @@ export function useInvoiceForm({ invoice, clientId, open, onSubmit }: UseInvoice
   // Initialiser le formulaire avec les données de la facture ou réinitialiser
   useEffect(() => {
     if (invoice) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         currency: invoice.currency || DEFAULT_CURRENCY,
         notes: invoice.notes || '',
         totalAmount: invoice.total?.toString() || '',
         advanceAmount: invoice.advanceAmount?.toString() || '',
         advanceMethod: DEFAULT_PAYMENT_METHOD,
-      });
+      }));
     } else {
+      // En création, utiliser la devise du tenant ou la devise par défaut
+      const defaultCurrency = tenant?.currency || DEFAULT_CURRENCY;
       setFormData({
-        currency: DEFAULT_CURRENCY,
+        currency: defaultCurrency,
         notes: '',
         totalAmount: '',
         advanceAmount: '',
@@ -50,7 +60,21 @@ export function useInvoiceForm({ invoice, clientId, open, onSubmit }: UseInvoice
       });
     }
     setValidationError(null);
-  }, [invoice, open]);
+  }, [invoice, open, tenant?.currency]);
+
+  // Mettre à jour la devise si le tenant devient disponible en mode création
+  // Ce useEffect s'assure que la devise est mise à jour même si le tenant se charge après l'ouverture du formulaire
+  useEffect(() => {
+    if (!invoice && open && tenant?.currency) {
+      // Mettre à jour si la devise a changé
+      setFormData(prev => {
+        if (prev.currency !== tenant.currency) {
+          return { ...prev, currency: tenant.currency || DEFAULT_CURRENCY };
+        }
+        return prev;
+      });
+    }
+  }, [tenant?.currency, invoice, open]);
 
   // Calculer le solde restant
   const balanceDue = parseFloat(formData.totalAmount || '0') - parseFloat(formData.advanceAmount || '0');

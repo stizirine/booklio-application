@@ -10,6 +10,7 @@ program
   .requiredOption('-e, --email <email>', 'Email de l\'utilisateur')
   .requiredOption('-p, --password <password>', 'Mot de passe')
   .option('-c, --client-type <type>', 'Type de client (optician, generic)', 'optician')
+  .option('--currency <currency>', 'Devise par défaut (EUR, USD, GBP, MAD, etc.)', 'EUR')
   .option('--api-url <url>', 'URL de l\'API', 'http://localhost:4000')
   .option('--api-key <key>', 'API Key (x-api-key header)', process.env.REQUIRED_HEADER_VALUE || '')
   .option('--first-name <firstName>', 'Prénom')
@@ -34,6 +35,7 @@ async function createAccount() {
       email,
       password,
       clientType,
+      currency,
       apiUrl,
       apiKey,
       firstName,
@@ -62,6 +64,7 @@ async function createAccount() {
     };
 
     // Ajouter les champs optionnels s'ils sont fournis
+    if (currency) payload.currency = currency;
     if (firstName) payload.firstName = firstName;
     if (lastName) payload.lastName = lastName;
     if (phone) payload.phone = phone;
